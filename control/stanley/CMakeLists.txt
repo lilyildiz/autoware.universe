@@ -19,13 +19,6 @@ project(stanley)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
-find_package(Eigen3 REQUIRED)
-
-include_directories(
-        SYSTEM
-        ${EIGEN3_INCLUDE_DIRS}
-)
-
 # stanley_core
 ament_auto_add_library(stanley_core SHARED
         src/stanley_core/stanley.cpp
@@ -45,7 +38,6 @@ rclcpp_components_register_node(stanley_lateral_controller
         PLUGIN "autoware::stanley::StanleyLateralController"
         EXECUTABLE stanley_lateral_controller_exe
         )
-
 
 # ament package generation and installing
 ament_auto_package(INSTALL_TO_SHARE
