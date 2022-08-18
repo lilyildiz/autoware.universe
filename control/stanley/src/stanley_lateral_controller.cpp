@@ -35,6 +35,8 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   utils::waitForTransform(m_tf_buffer, "map", "base_link", logger);
 }
 
+StanleyLateralController::~StanleyLateralController() {}
+
 void StanleyLateralController::setInputData(
   const autoware::motion::control::trajectory_follower::InputData & input_data)
 {

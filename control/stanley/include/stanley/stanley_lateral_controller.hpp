@@ -49,7 +49,15 @@ namespace stanley
 class StanleyLateralController : public LateralControllerBase
 {
 public:
+  /**
+   * @brief constructor
+   */
   explicit StanleyLateralController(rclcpp::Node & node);
+
+  /**
+   * @brief destructor
+   */
+  virtual ~StanleyLateralController();
 
 private:
   // Node
