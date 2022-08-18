@@ -78,6 +78,12 @@ std::pair<bool, double> Stanley::run()
   // Calculate the steering angle
   double steering_angle = utils::normalizeEulerAngle(cross_track_yaw_error + trajectory_yaw_error);
 
+  RCLCPP_ERROR( logger, "Cross track yaw error: %f", cross_track_yaw_error);
+  RCLCPP_ERROR( logger, "Trajectory yaw error: %f", trajectory_yaw_error);
+  RCLCPP_ERROR( logger, "Steering angle: %f", steering_angle);
+  RCLCPP_ERROR( logger, "m_k: %f", m_k);
+
+
   return std::make_pair(true, steering_angle);
 }
 
