@@ -62,7 +62,7 @@ std::pair<bool, double> Stanley::run()
   // Get heading error
   double vehicle_yaw = tf2::getYaw(m_pose_ptr->orientation);
   double trajectory_yaw = utils::calcCurvature(m_trajectory_ptr->back(), m_trajectory_ptr->at(0));
-  double trajectory_yaw_error = utils::normalizeEulerAngle(vehicle_yaw - trajectory_yaw);
+  double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Get the closest point
   std::pair<size_t, double> closest_point = utils::calcClosestPoint(*m_trajectory_ptr, *m_pose_ptr);
