@@ -17,6 +17,7 @@
   <depend>autoware_auto_vehicle_msgs</depend>
   <depend>motion_utils</depend>
   <depend>pure_pursuit</depend>
+  <depend>stanley</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>trajectory_follower</depend>

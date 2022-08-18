@@ -17,6 +17,7 @@
 #include "motion_common/motion_common.hpp"
 #include "motion_common/trajectory_common.hpp"
 #include "pure_pursuit/pure_pursuit_lateral_controller.hpp"
+#include "stanley/stanley_lateral_controller.hpp"
 #include "time_utils/time_utils.hpp"
 #include "trajectory_follower/mpc_lateral_controller.hpp"
 #include "trajectory_follower/pid_longitudinal_controller.hpp"
@@ -52,6 +53,10 @@ Controller::Controller(const rclcpp::NodeOptions & node_options) : Node("control
     }
     case LateralControllerMode::PURE_PURSUIT: {
       lateral_controller_ = std::make_shared<pure_pursuit::PurePursuitLateralController>(*this);
+      break;
+    }
+    case LateralControllerMode::STANLEY: {
+      lateral_controller_ = std::make_shared<stanley::StanleyLateralController>(*this);
       break;
     }
     default:
@@ -93,6 +98,7 @@ Controller::LateralControllerMode Controller::getLateralControllerMode(
 {
   if (controller_mode == "mpc_follower") return LateralControllerMode::MPC;
   if (controller_mode == "pure_pursuit") return LateralControllerMode::PURE_PURSUIT;
+  if (controller_mode == "stanley") return LateralControllerMode::STANLEY;
 
   return LateralControllerMode::INVALID;
 }
