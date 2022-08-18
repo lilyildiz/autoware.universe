@@ -39,7 +39,7 @@ double calcCurvature(const geometry_msgs::msg::Pose & pose1, const geometry_msgs
   return atan2(pose1.position.y - pose2.position.y, pose1.position.x - pose2.position.x);
 }
 
-double eucladianDistance(
+double euclideanDistance(
   const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2)
 {
   return sqrt(
@@ -55,7 +55,7 @@ std::pair<size_t, double> calcClosestPoint(
   size_t closest_point_index = 0;
   double min_distance = std::numeric_limits<double>::max();
   for (size_t i = 0; i < trajectory.size() - 1; i++) {
-    double distance = eucladianDistance(trajectory.at(i), pose);
+    double distance = euclideanDistance(trajectory.at(i), pose);
     if (distance < min_distance) {
       min_distance = distance;
       closest_point_index = i;

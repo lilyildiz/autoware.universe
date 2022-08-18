@@ -45,7 +45,7 @@ double calcCurvature(
 std::pair<size_t, double> calcClosestPoint(
   std::vector<geometry_msgs::msg::Pose> & trajectory, geometry_msgs::msg::Pose & pose);
 
-double eucladianDistance(
+double euclideanDistance(
   const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2);
 
 geometry_msgs::msg::TransformStamped waitForTransform(
