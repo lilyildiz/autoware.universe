@@ -37,7 +37,7 @@ namespace autoware
 {
 namespace stanley
 {
-int32_t print_hello();
+
 class Stanley
 {
 public:

@@ -23,12 +23,6 @@ namespace autoware
 namespace stanley
 {
 
-int32_t print_hello()
-{
-  std::cout << "Hello World" << std::endl;
-  return 0;
-}
-
 void Stanley::setTrajectory(const std::vector<geometry_msgs::msg::Pose> & trajectory)
 {
   m_trajectory_ptr = std::make_shared<std::vector<geometry_msgs::msg::Pose>>();
