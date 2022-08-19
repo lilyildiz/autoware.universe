@@ -39,8 +39,7 @@ namespace utils
 {
 double normalizeEulerAngle(const double euler);
 
-double calcCurvature(
-  const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2);
+double calcHeading(const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2);
 
 std::pair<size_t, double> calcClosestPoint(
   std::vector<geometry_msgs::msg::Pose> & trajectory, geometry_msgs::msg::Pose & pose);

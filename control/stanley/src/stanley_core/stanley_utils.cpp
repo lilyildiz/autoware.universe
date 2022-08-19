@@ -34,7 +34,7 @@ double normalizeEulerAngle(const double euler)
   return normalized;
 }
 
-double calcCurvature(const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2)
+double calcHeading(const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2)
 {
   return atan2(pose1.position.y - pose2.position.y, pose1.position.x - pose2.position.x);
 }

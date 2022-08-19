@@ -61,14 +61,15 @@ std::pair<bool, double> Stanley::run()
 
   // Get heading error
   double vehicle_yaw = tf2::getYaw(m_pose_ptr->orientation);
-  double trajectory_yaw = utils::calcCurvature(m_trajectory_ptr->back(), m_trajectory_ptr->at(0));
+  double trajectory_yaw = utils::calcHeading(m_trajectory_ptr->back(), m_trajectory_ptr->at(0));
   double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Get the closest point
   std::pair<size_t, double> closest_point = utils::calcClosestPoint(*m_trajectory_ptr, *m_pose_ptr);
 
   // Calculate cross track error
-  double cross_track_yaw = utils::calcCurvature(*m_pose_ptr, m_trajectory_ptr->at(closest_point.first));
+  double cross_track_yaw =
+    utils::calcHeading(*m_pose_ptr, m_trajectory_ptr->at(closest_point.first));
   double cross_track_yaw_diff = utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
   double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
