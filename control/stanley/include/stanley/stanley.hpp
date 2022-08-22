@@ -45,7 +45,16 @@ namespace stanley
 class Stanley
 {
 public:
-  Stanley() : m_k(0.0), m_k_soft(0.0), m_k_d_yaw(0.0), m_wheelbase_m(0.0), m_curr_steer(0.0) {}
+  Stanley()
+  : m_k(0.0),
+    m_k_soft(0.0),
+    m_k_d_yaw(0.0),
+    m_k_d_steer(0.0),
+    m_wheelbase_m(0.0),
+    m_curr_steer(0.0),
+    m_prev_steer(0.0)
+  {
+  }
   ~Stanley() = default;
 
   rclcpp::Logger logger = rclcpp::get_logger("stanley");
@@ -67,8 +76,10 @@ private:
   double m_k;
   double m_k_soft;
   double m_k_d_yaw;
+  double m_k_d_steer;
   double m_wheelbase_m;
   double m_curr_steer;
+  double m_prev_steer;
 
   std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;
   std::shared_ptr<Pose> m_pose_ptr;

@@ -55,6 +55,7 @@ std::pair<bool, double> Stanley::run()
   // temp
   m_k_soft = 1.00;
   m_k_d_yaw = 0.09;
+  m_k_d_steer = 0.45;
 
   // Get front axle pose
   Pose front_axle_pose = tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_wheelbase_m, 0.0, 0.0);
@@ -94,12 +95,19 @@ std::pair<bool, double> Stanley::run()
     utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, trajectory_yaw, m_wheelbase_m);
   double yaw_feedback = -m_k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
+  // Steer damping
+  double steer_damp = m_k_d_steer * (m_prev_steer - m_curr_steer);
+
   // Calculate the steering angle
-  double steering_angle =
-    utils::normalizeEulerAngle(cross_track_yaw_error + trajectory_yaw_error + yaw_feedback);
+  double steering_angle = utils::normalizeEulerAngle(
+    cross_track_yaw_error + trajectory_yaw_error + yaw_feedback + steer_damp);
+
+  m_prev_steer = m_curr_steer;
 
   RCLCPP_ERROR(logger, "Cross track yaw error: %f", cross_track_yaw_error);
   RCLCPP_ERROR(logger, "Trajectory yaw error: %f", trajectory_yaw_error);
+  RCLCPP_ERROR(logger, "Yaw feedback: %f", yaw_feedback);
+  RCLCPP_ERROR(logger, "Steer damping: %f", steer_damp);
   RCLCPP_ERROR(logger, "Steering angle: %f", steering_angle);
   RCLCPP_ERROR(logger, "m_k: %f", m_k);
 
