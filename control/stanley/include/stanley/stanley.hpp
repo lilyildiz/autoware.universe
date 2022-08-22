@@ -45,7 +45,7 @@ namespace stanley
 class Stanley
 {
 public:
-  Stanley() : m_k(0.0), m_k_soft(0.0), m_dist_to_fr_ax(0.0) {}
+  Stanley() : m_k(0.0), m_k_soft(0.0), m_k_d_yaw(0.0), m_wheelbase_m(0.0), m_curr_steer(0.0) {}
   ~Stanley() = default;
 
   rclcpp::Logger logger = rclcpp::get_logger("stanley");
@@ -55,7 +55,9 @@ public:
   void setPose(const Pose & pose);
   void setOdom(const Odometry & odom);
   void setK(const double k) { this->m_k = k; }
-  void setDistToFrAx(const double dist) { this->m_dist_to_fr_ax = dist; }
+  void setDistToFrAx(const double dist) { this->m_wheelbase_m = dist; }
+  void setKSoft(const double k) { this->m_k_soft = k; }
+  void setCurrentSteering(const double current_steering) { this->m_curr_steer = current_steering; }
 
   bool isReady() const;
   std::pair<bool, double> run();
@@ -64,7 +66,9 @@ private:
   // k The gain of the stanley controller.
   double m_k;
   double m_k_soft;
-  double m_dist_to_fr_ax;
+  double m_k_d_yaw;
+  double m_wheelbase_m;
+  double m_curr_steer;
 
   std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;
   std::shared_ptr<Pose> m_pose_ptr;

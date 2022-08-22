@@ -69,6 +69,7 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   m_stanley->setOdom(*m_odom);
   m_stanley->setPose(m_pose->pose);
   m_stanley->setDistToFrAx(m_vehicle_info.wheel_base_m);
+  m_stanley->setCurrentSteering(m_steering_report->steering_tire_angle);
 
   // Run Stanley
   std::pair<bool, double> stanley_result = m_stanley->run();

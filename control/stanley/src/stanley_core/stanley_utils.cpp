@@ -89,6 +89,11 @@ std::vector<Pose> extractPoses(const Trajectory & trajectory)
   return poses;
 }
 
+double calcYawRate(double velocity, double yaw, double wheelbase)
+{
+  return -(velocity * std::sin(yaw)) / wheelbase;
+}
+
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware

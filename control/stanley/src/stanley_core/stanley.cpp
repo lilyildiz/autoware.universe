@@ -42,7 +42,7 @@ void Stanley::setOdom(const Odometry & odom)
 bool Stanley::isReady() const
 {
   return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr &&
-         m_dist_to_fr_ax != 0.0;
+         m_wheelbase_m != 0.0;
 }
 
 std::pair<bool, double> Stanley::run()
@@ -52,12 +52,12 @@ std::pair<bool, double> Stanley::run()
     RCLCPP_ERROR(logger, "[Stanley]Inputs are not ready");
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
-  //temp
+  // temp
   m_k_soft = 1.00;
+  m_k_d_yaw = 0.09;
 
   // Get front axle pose
-  Pose front_axle_pose =
-    tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_dist_to_fr_ax, 0.0, 0.0);
+  Pose front_axle_pose = tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_wheelbase_m, 0.0, 0.0);
 
   // Get the closest point to front axle
   std::pair<size_t, double> closest_point =
@@ -74,8 +74,7 @@ std::pair<bool, double> Stanley::run()
 
   // Get heading error
   double vehicle_yaw = tf2::getYaw(front_axle_pose.orientation);
-  double trajectory_yaw =
-    tf2::getYaw(m_trajectory_ptr->at(closest_point.first).orientation);
+  double trajectory_yaw = tf2::getYaw(m_trajectory_ptr->at(closest_point.first).orientation);
   double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Calculate cross track error
@@ -85,10 +84,19 @@ std::pair<bool, double> Stanley::run()
   double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
 
-  double cross_track_yaw_error = atan(m_k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + m_k_soft));
+  double cross_track_yaw_error =
+    atan(m_k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + m_k_soft));
+
+  // Negative feedback on yaw rate
+  double measured_yaw_rate =
+    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, vehicle_yaw, m_wheelbase_m);
+  double trajectory_yaw_rate =
+    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, trajectory_yaw, m_wheelbase_m);
+  double yaw_feedback = -m_k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
   // Calculate the steering angle
-  double steering_angle = utils::normalizeEulerAngle(cross_track_yaw_error + trajectory_yaw_error);
+  double steering_angle =
+    utils::normalizeEulerAngle(cross_track_yaw_error + trajectory_yaw_error + yaw_feedback);
 
   RCLCPP_ERROR(logger, "Cross track yaw error: %f", cross_track_yaw_error);
   RCLCPP_ERROR(logger, "Trajectory yaw error: %f", trajectory_yaw_error);

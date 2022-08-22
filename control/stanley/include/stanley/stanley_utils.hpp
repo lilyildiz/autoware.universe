@@ -52,6 +52,8 @@ geometry_msgs::msg::TransformStamped waitForTransform(
   rclcpp::Logger & logger);
 
 std::vector<Pose> extractPoses(const Trajectory & trajectory);
+
+double calcYawRate(double velocity, double yaw, double wheelbase);
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware
