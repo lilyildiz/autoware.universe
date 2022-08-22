@@ -72,8 +72,8 @@ std::pair<bool, double> Stanley::run()
 
   // Get heading error
   double vehicle_yaw = tf2::getYaw(front_axle_pose.orientation);
-  double trajectory_yaw = utils::calcHeading(
-    m_trajectory_ptr->at(closest_point.first + 1), m_trajectory_ptr->at(closest_point.first));
+  double trajectory_yaw =
+    tf2::getYaw(m_trajectory_ptr->at(closest_point.first).orientation);
   double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Calculate cross track error
