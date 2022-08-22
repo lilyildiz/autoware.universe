@@ -26,6 +26,7 @@
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <tier4_autoware_utils/tier4_autoware_utils.hpp>
 
 #include <tf2/utils.h>
 
@@ -41,7 +42,7 @@ namespace stanley
 class Stanley
 {
 public:
-  Stanley() : m_k(0.0) {}
+  Stanley() : m_k(0.0), m_dist_to_fr_ax(0.0) {}
   ~Stanley() = default;
 
   rclcpp::Logger logger = rclcpp::get_logger("stanley");
@@ -51,6 +52,7 @@ public:
   void setPose(const geometry_msgs::msg::Pose & pose);
   void setOdom(const nav_msgs::msg::Odometry & odom);
   void setK(const double k) { this->m_k = k; }
+  void setDistToFrAx(const double dist) { this->m_dist_to_fr_ax = dist; }
 
   bool isReady() const;
   std::pair<bool, double> run();
@@ -58,6 +60,7 @@ public:
 private:
   // k The gain of the stanley controller.
   double m_k;
+  double m_dist_to_fr_ax;
 
   std::shared_ptr<std::vector<geometry_msgs::msg::Pose>> m_trajectory_ptr;
   std::shared_ptr<geometry_msgs::msg::Pose> m_pose_ptr;

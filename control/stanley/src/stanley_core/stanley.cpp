@@ -43,7 +43,7 @@ void Stanley::setOdom(const nav_msgs::msg::Odometry & odom)
 
 bool Stanley::isReady() const
 {
-  return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr;
+  return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr && m_dist_to_fr_ax != 0.0;
 }
 
 
@@ -51,26 +51,32 @@ std::pair<bool, double> Stanley::run()
 {
   // Check if we have enough data to run the algorithm
   if (!isReady()) {
-    RCLCPP_ERROR(logger, "Inputs are not ready");
+    RCLCPP_ERROR(logger, "[Stanley]Inputs are not ready");
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
-  if (m_trajectory_ptr->size() < 2) {
-    RCLCPP_ERROR(logger, "Trajectory is too short");
-    return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
-  }
+
+  // Get front axle pose
+  geometry_msgs::msg::Pose front_axle_pose = tier4_autoware_utils::calcOffsetPose(*m_pose_ptr,m_dist_to_fr_ax,0.0,0.0);
 
   // Get the closest point
-  std::pair<size_t, double> closest_point = utils::calcClosestPoint(*m_trajectory_ptr, *m_pose_ptr);
+  std::pair<size_t, double> closest_point = utils::calcClosestPoint(*m_trajectory_ptr, front_axle_pose);
+  std::vector<geometry_msgs::msg::Pose> croppedVec = {m_trajectory_ptr->begin()+closest_point.first, m_trajectory_ptr->end()};
+
+  RCLCPP_ERROR( logger, "PAth size: %ld", croppedVec.size());
+  if (croppedVec.size() < 4) {
+    RCLCPP_ERROR(logger, "[Stanley]Trajectory is too short");
+    return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
+  }
 
   // Get heading error
-  double vehicle_yaw = tf2::getYaw(m_pose_ptr->orientation);
-  double trajectory_yaw = utils::calcHeading(m_trajectory_ptr->at(closest_point.first + 10), m_trajectory_ptr->at(closest_point.first));
+  double vehicle_yaw = tf2::getYaw(front_axle_pose.orientation);
+  double trajectory_yaw = utils::calcHeading(m_trajectory_ptr->at(closest_point.first + 3), m_trajectory_ptr->at(closest_point.first));
   double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
 
   // Calculate cross track error
   double cross_track_yaw =
-    utils::calcHeading(*m_pose_ptr, m_trajectory_ptr->at(closest_point.first));
+    utils::calcHeading(front_axle_pose, m_trajectory_ptr->at(closest_point.first));
   double cross_track_yaw_diff = utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
   double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);

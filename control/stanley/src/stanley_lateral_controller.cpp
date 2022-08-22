@@ -33,6 +33,9 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
 
   // Wait for pose
   utils::waitForTransform(m_tf_buffer, "map", "base_link", logger);
+
+  // Vehicle Parameters
+  m_vehicle_info = vehicle_info_util::VehicleInfoUtil(*m_node).getVehicleInfo();
 }
 
 StanleyLateralController::~StanleyLateralController() {}
@@ -57,7 +60,7 @@ boost::optional<LateralOutput> StanleyLateralController::run()
 
   // Check inputs
   if (!isReady()) {
-    RCLCPP_ERROR(logger, "Inputs are not ready");
+    RCLCPP_ERROR(logger, "[Stanley Lateral Controller]Inputs are not ready");
     return boost::none;
   }
 
@@ -66,6 +69,7 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   m_stanley->setTrajectory(utils::extractPoses(*m_trajectory));
   m_stanley->setOdom(*m_odom);
   m_stanley->setPose(m_pose->pose);
+  m_stanley->setDistToFrAx(m_vehicle_info.wheel_base_m);
 
   // Run Stanley
   std::pair<bool, double> stanley_result = m_stanley->run();

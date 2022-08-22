@@ -21,6 +21,7 @@
 #include "tf2_ros/transform_listener.h"
 #include "tier4_autoware_utils/ros/self_pose_listener.hpp"
 #include "trajectory_follower/lateral_controller_base.hpp"
+#include <vehicle_info_util/vehicle_info_util.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <stanley/stanley.hpp>
@@ -89,6 +90,7 @@ private:
   // Parameters
   double m_k;
   double m_convergence_threshold;
+  vehicle_info_util::VehicleInfo m_vehicle_info;
 
   // Compute
   boost::optional<LateralOutput> run() override;
