@@ -45,7 +45,7 @@ namespace stanley
 class Stanley
 {
 public:
-  Stanley() : m_k(0.0), m_dist_to_fr_ax(0.0) {}
+  Stanley() : m_k(0.0), m_k_soft(0.0), m_dist_to_fr_ax(0.0) {}
   ~Stanley() = default;
 
   rclcpp::Logger logger = rclcpp::get_logger("stanley");
@@ -63,6 +63,7 @@ public:
 private:
   // k The gain of the stanley controller.
   double m_k;
+  double m_k_soft;
   double m_dist_to_fr_ax;
 
   std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;

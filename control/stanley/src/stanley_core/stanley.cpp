@@ -52,18 +52,20 @@ std::pair<bool, double> Stanley::run()
     RCLCPP_ERROR(logger, "[Stanley]Inputs are not ready");
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
+  //temp
+  m_k_soft = 1.00;
 
   // Get front axle pose
   Pose front_axle_pose =
     tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_dist_to_fr_ax, 0.0, 0.0);
 
-  // Get the closest point
+  // Get the closest point to front axle
   std::pair<size_t, double> closest_point =
     utils::calcClosestPoint(*m_trajectory_ptr, front_axle_pose);
-  std::vector<Pose> cropped_vec = {
-    m_trajectory_ptr->begin() + closest_point.first, m_trajectory_ptr->end()};
 
   // Check if we have enough points to run the algorithm
+  std::vector<Pose> cropped_vec = {
+    m_trajectory_ptr->begin() + closest_point.first, m_trajectory_ptr->end()};
   RCLCPP_ERROR(logger, "PAth size: %ld", cropped_vec.size());
   if (cropped_vec.size() < 2) {
     RCLCPP_ERROR(logger, "[Stanley]Trajectory is too short");
@@ -83,7 +85,7 @@ std::pair<bool, double> Stanley::run()
   double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
 
-  double cross_track_yaw_error = atan(m_k * cross_track_error / m_odom_ptr->twist.twist.linear.x);
+  double cross_track_yaw_error = atan(m_k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + m_k_soft));
 
   // Calculate the steering angle
   double steering_angle = utils::normalizeEulerAngle(cross_track_yaw_error + trajectory_yaw_error);
