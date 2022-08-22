@@ -21,11 +21,11 @@
 #include "tf2_ros/transform_listener.h"
 #include "tier4_autoware_utils/ros/self_pose_listener.hpp"
 #include "trajectory_follower/lateral_controller_base.hpp"
-#include <vehicle_info_util/vehicle_info_util.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <stanley/stanley.hpp>
 #include <stanley/stanley_utils.hpp>
+#include <vehicle_info_util/vehicle_info_util.hpp>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
@@ -41,6 +41,10 @@ using autoware::motion::control::trajectory_follower::InputData;
 using autoware::motion::control::trajectory_follower::LateralControllerBase;
 using autoware::motion::control::trajectory_follower::LateralOutput;
 using autoware_auto_control_msgs::msg::AckermannLateralCommand;
+using autoware_auto_planning_msgs::msg::Trajectory;
+using autoware_auto_vehicle_msgs::msg::SteeringReport;
+using geometry_msgs::msg::PoseStamped;
+using nav_msgs::msg::Odometry;
 
 namespace autoware
 {
@@ -70,9 +74,9 @@ private:
   bool isReady();
 
   // Input data
-  autoware_auto_planning_msgs::msg::Trajectory::ConstSharedPtr m_trajectory;
-  nav_msgs::msg::Odometry::ConstSharedPtr m_odom;
-  autoware_auto_vehicle_msgs::msg::SteeringReport::ConstSharedPtr m_steering_report;
+  Trajectory::ConstSharedPtr m_trajectory;
+  Odometry::ConstSharedPtr m_odom;
+  SteeringReport::ConstSharedPtr m_steering_report;
   /**
    * @brief set input data
    */
@@ -82,7 +86,7 @@ private:
   tf2_ros::Buffer m_tf_buffer;
   tf2_ros::TransformListener m_tf_listener;
   tier4_autoware_utils::SelfPoseListener m_pose_listener;
-  geometry_msgs::msg::PoseStamped::ConstSharedPtr m_pose;
+  PoseStamped::ConstSharedPtr m_pose;
 
   // Algorithm
   std::unique_ptr<Stanley> m_stanley;

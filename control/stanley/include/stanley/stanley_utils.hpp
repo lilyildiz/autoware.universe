@@ -26,10 +26,12 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include "autoware_auto_planning_msgs/msg/trajectory.hpp"
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
-#include "autoware_auto_planning_msgs/msg/trajectory.hpp"
+using autoware_auto_planning_msgs::msg::Trajectory;
+using geometry_msgs::msg::Pose;
 
 namespace autoware
 {
@@ -39,20 +41,17 @@ namespace utils
 {
 double normalizeEulerAngle(const double euler);
 
-double calcHeading(const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2);
+double calcHeading(const Pose & pose1, const Pose & pose2);
 
-std::pair<size_t, double> calcClosestPoint(
-  std::vector<geometry_msgs::msg::Pose> & trajectory, geometry_msgs::msg::Pose & pose);
+std::pair<size_t, double> calcClosestPoint(std::vector<Pose> & trajectory, Pose & pose);
 
-double euclideanDistance(
-  const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2);
+double euclideanDistance(const Pose & pose1, const Pose & pose2);
 
 geometry_msgs::msg::TransformStamped waitForTransform(
   const tf2_ros::Buffer & tf_buffer, const std::string & from, const std::string & to,
   rclcpp::Logger & logger);
 
-std::vector<geometry_msgs::msg::Pose> extractPoses(
-  const autoware_auto_planning_msgs::msg::Trajectory & trajectory);
+std::vector<Pose> extractPoses(const Trajectory & trajectory);
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware

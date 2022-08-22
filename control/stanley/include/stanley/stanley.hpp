@@ -23,16 +23,19 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <stanley/stanley_utils.hpp>
+#include <tier4_autoware_utils/tier4_autoware_utils.hpp>
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <tier4_autoware_utils/tier4_autoware_utils.hpp>
 
 #include <tf2/utils.h>
 
 #include <memory>
 #include <utility>
 #include <vector>
+
+using geometry_msgs::msg::Pose;
+using nav_msgs::msg::Odometry;
 
 namespace autoware
 {
@@ -48,9 +51,9 @@ public:
   rclcpp::Logger logger = rclcpp::get_logger("stanley");
 
   // Input setters
-  void setTrajectory(const std::vector<geometry_msgs::msg::Pose> & trajectory);
-  void setPose(const geometry_msgs::msg::Pose & pose);
-  void setOdom(const nav_msgs::msg::Odometry & odom);
+  void setTrajectory(const std::vector<Pose> & trajectory);
+  void setPose(const Pose & pose);
+  void setOdom(const Odometry & odom);
   void setK(const double k) { this->m_k = k; }
   void setDistToFrAx(const double dist) { this->m_dist_to_fr_ax = dist; }
 
@@ -62,9 +65,9 @@ private:
   double m_k;
   double m_dist_to_fr_ax;
 
-  std::shared_ptr<std::vector<geometry_msgs::msg::Pose>> m_trajectory_ptr;
-  std::shared_ptr<geometry_msgs::msg::Pose> m_pose_ptr;
-  std::shared_ptr<nav_msgs::msg::Odometry> m_odom_ptr;
+  std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;
+  std::shared_ptr<Pose> m_pose_ptr;
+  std::shared_ptr<Odometry> m_odom_ptr;
 };
 
 }  // namespace stanley

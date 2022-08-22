@@ -40,8 +40,7 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
 
 StanleyLateralController::~StanleyLateralController() {}
 
-void StanleyLateralController::setInputData(
-  const autoware::motion::control::trajectory_follower::InputData & input_data)
+void StanleyLateralController::setInputData(const InputData & input_data)
 {
   m_trajectory = input_data.current_trajectory_ptr;
   m_odom = input_data.current_odometry_ptr;

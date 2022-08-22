@@ -16,36 +16,34 @@
 
 #include "stanley/stanley.hpp"
 
-#include <iostream>
-
 namespace autoware
 {
 namespace stanley
 {
 
-void Stanley::setTrajectory(const std::vector<geometry_msgs::msg::Pose> & trajectory)
+void Stanley::setTrajectory(const std::vector<Pose> & trajectory)
 {
-  m_trajectory_ptr = std::make_shared<std::vector<geometry_msgs::msg::Pose>>();
+  m_trajectory_ptr = std::make_shared<std::vector<Pose>>();
   *m_trajectory_ptr = trajectory;
 }
 
-void Stanley::setPose(const geometry_msgs::msg::Pose & pose)
+void Stanley::setPose(const Pose & pose)
 {
-  m_pose_ptr = std::make_shared<geometry_msgs::msg::Pose>();
+  m_pose_ptr = std::make_shared<Pose>();
   *m_pose_ptr = pose;
 }
 
-void Stanley::setOdom(const nav_msgs::msg::Odometry & odom)
+void Stanley::setOdom(const Odometry & odom)
 {
-  m_odom_ptr = std::make_shared<nav_msgs::msg::Odometry>();
+  m_odom_ptr = std::make_shared<Odometry>();
   *m_odom_ptr = odom;
 }
 
 bool Stanley::isReady() const
 {
-  return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr && m_dist_to_fr_ax != 0.0;
+  return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr &&
+         m_dist_to_fr_ax != 0.0;
 }
-
 
 std::pair<bool, double> Stanley::run()
 {
@@ -56,23 +54,27 @@ std::pair<bool, double> Stanley::run()
   }
 
   // Get front axle pose
-  geometry_msgs::msg::Pose front_axle_pose = tier4_autoware_utils::calcOffsetPose(*m_pose_ptr,m_dist_to_fr_ax,0.0,0.0);
+  Pose front_axle_pose =
+    tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_dist_to_fr_ax, 0.0, 0.0);
 
   // Get the closest point
-  std::pair<size_t, double> closest_point = utils::calcClosestPoint(*m_trajectory_ptr, front_axle_pose);
-  std::vector<geometry_msgs::msg::Pose> croppedVec = {m_trajectory_ptr->begin()+closest_point.first, m_trajectory_ptr->end()};
+  std::pair<size_t, double> closest_point =
+    utils::calcClosestPoint(*m_trajectory_ptr, front_axle_pose);
+  std::vector<Pose> cropped_vec = {
+    m_trajectory_ptr->begin() + closest_point.first, m_trajectory_ptr->end()};
 
-  RCLCPP_ERROR( logger, "PAth size: %ld", croppedVec.size());
-  if (croppedVec.size() < 4) {
+  // Check if we have enough points to run the algorithm
+  RCLCPP_ERROR(logger, "PAth size: %ld", cropped_vec.size());
+  if (cropped_vec.size() < 2) {
     RCLCPP_ERROR(logger, "[Stanley]Trajectory is too short");
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
 
   // Get heading error
   double vehicle_yaw = tf2::getYaw(front_axle_pose.orientation);
-  double trajectory_yaw = utils::calcHeading(m_trajectory_ptr->at(closest_point.first + 3), m_trajectory_ptr->at(closest_point.first));
+  double trajectory_yaw = utils::calcHeading(
+    m_trajectory_ptr->at(closest_point.first + 1), m_trajectory_ptr->at(closest_point.first));
   double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
-
 
   // Calculate cross track error
   double cross_track_yaw =
@@ -86,11 +88,10 @@ std::pair<bool, double> Stanley::run()
   // Calculate the steering angle
   double steering_angle = utils::normalizeEulerAngle(cross_track_yaw_error + trajectory_yaw_error);
 
-  RCLCPP_ERROR( logger, "Cross track yaw error: %f", cross_track_yaw_error);
-  RCLCPP_ERROR( logger, "Trajectory yaw error: %f", trajectory_yaw_error);
-  RCLCPP_ERROR( logger, "Steering angle: %f", steering_angle);
-  RCLCPP_ERROR( logger, "m_k: %f", m_k);
-
+  RCLCPP_ERROR(logger, "Cross track yaw error: %f", cross_track_yaw_error);
+  RCLCPP_ERROR(logger, "Trajectory yaw error: %f", trajectory_yaw_error);
+  RCLCPP_ERROR(logger, "Steering angle: %f", steering_angle);
+  RCLCPP_ERROR(logger, "m_k: %f", m_k);
 
   return std::make_pair(true, steering_angle);
 }

@@ -34,20 +34,18 @@ double normalizeEulerAngle(const double euler)
   return normalized;
 }
 
-double calcHeading(const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2)
+double calcHeading(const Pose & pose1, const Pose & pose2)
 {
   return atan2(pose1.position.y - pose2.position.y, pose1.position.x - pose2.position.x);
 }
 
-double euclideanDistance(
-  const geometry_msgs::msg::Pose & pose1, const geometry_msgs::msg::Pose & pose2)
+double euclideanDistance(const Pose & pose1, const Pose & pose2)
 {
   return sqrt(
     pow(pose1.position.x - pose2.position.x, 2) + pow(pose1.position.y - pose2.position.y, 2));
 }
 
-std::pair<size_t, double> calcClosestPoint(
-  std::vector<geometry_msgs::msg::Pose> & trajectory, geometry_msgs::msg::Pose & pose)
+std::pair<size_t, double> calcClosestPoint(std::vector<Pose> & trajectory, Pose & pose)
 {
   if (trajectory.size() < 2) {
     return std::make_pair(0, 0.0);
@@ -80,10 +78,9 @@ geometry_msgs::msg::TransformStamped waitForTransform(
   return geometry_msgs::msg::TransformStamped();
 }
 
-std::vector<geometry_msgs::msg::Pose> extractPoses(
-  const autoware_auto_planning_msgs::msg::Trajectory & trajectory)
+std::vector<Pose> extractPoses(const Trajectory & trajectory)
 {
-  std::vector<geometry_msgs::msg::Pose> poses;
+  std::vector<Pose> poses;
 
   for (const auto & p : trajectory.points) {
     poses.push_back(p.pose);
