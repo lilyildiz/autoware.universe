@@ -72,3 +72,10 @@
       mass_rr: 600.0
       cf: 155494.663
       cr: 155494.663
+
+    # -- stanley controller --
+    stanley_k: 0.13                    # stanley cross-track gain
+    stanley_k_soft: 1.00               # stanley gain for low speed
+    stanley_k_d_yaw: 0.09              # stanley gain for negative yaw rate feedback
+    stanley_k_d_steer: 0.05            # stanley gain for steer damping
+    stanley_convergence_threshold: 0.1 # convergence threshold for stanley controller
