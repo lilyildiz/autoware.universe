@@ -53,9 +53,14 @@ std::pair<bool, double> Stanley::run()
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
   // temp
+  m_k = 0.13;
   m_k_soft = 1.00;
   m_k_d_yaw = 0.09;
-  m_k_d_steer = 0.45;
+  m_k_d_steer = 0.05;
+
+  // Append virtual points to trajectory
+  const auto virtual_path = utils::createVirtualPath(*m_trajectory_ptr, m_wheelbase_m, 0.5);
+  m_trajectory_ptr->insert(m_trajectory_ptr->end(), virtual_path.begin(), virtual_path.end());
 
   // Get front axle pose
   Pose front_axle_pose = tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_wheelbase_m, 0.0, 0.0);
@@ -63,15 +68,6 @@ std::pair<bool, double> Stanley::run()
   // Get the closest point to front axle
   std::pair<size_t, double> closest_point =
     utils::calcClosestPoint(*m_trajectory_ptr, front_axle_pose);
-
-  // Check if we have enough points to run the algorithm
-  std::vector<Pose> cropped_vec = {
-    m_trajectory_ptr->begin() + closest_point.first, m_trajectory_ptr->end()};
-  RCLCPP_ERROR(logger, "PAth size: %ld", cropped_vec.size());
-  if (cropped_vec.size() < 2) {
-    RCLCPP_ERROR(logger, "[Stanley]Trajectory is too short");
-    return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
-  }
 
   // Get heading error
   double vehicle_yaw = tf2::getYaw(front_axle_pose.orientation);
@@ -93,7 +89,7 @@ std::pair<bool, double> Stanley::run()
     utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, vehicle_yaw, m_wheelbase_m);
   double trajectory_yaw_rate =
     utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, trajectory_yaw, m_wheelbase_m);
-  double yaw_feedback = -m_k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
+  double yaw_feedback = m_k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
   // Steer damping
   double steer_damp = m_k_d_steer * (m_prev_steer - m_curr_steer);

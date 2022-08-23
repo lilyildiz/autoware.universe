@@ -28,7 +28,7 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   m_stanley = std::make_unique<Stanley>();
 
   // Parameters
-  m_k = m_node->declare_parameter<double>("k", 1.0);
+  m_k = m_node->declare_parameter<double>("stanley_k", 1.0);
   m_convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);
 
   // Wait for pose

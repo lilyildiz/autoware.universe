@@ -21,10 +21,12 @@
 #ifndef STANLEY__STANLEY_UTILS_HPP_
 #define STANLEY__STANLEY_UTILS_HPP_
 
+#include "motion_utils/resample/resample.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
 #include <rclcpp/rclcpp.hpp>
+#include <tier4_autoware_utils/tier4_autoware_utils.hpp>
 
 #include "autoware_auto_planning_msgs/msg/trajectory.hpp"
 #include <geometry_msgs/msg/pose.hpp>
@@ -54,6 +56,9 @@ geometry_msgs::msg::TransformStamped waitForTransform(
 std::vector<Pose> extractPoses(const Trajectory & trajectory);
 
 double calcYawRate(double velocity, double yaw, double wheelbase);
+
+std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, double interval);
+
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware
