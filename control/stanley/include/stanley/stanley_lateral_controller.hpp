@@ -95,6 +95,7 @@ private:
   double m_k;
   double m_convergence_threshold;
   vehicle_info_util::VehicleInfo m_vehicle_info;
+  double m_max_steer_rad;
 
   // Compute
   boost::optional<LateralOutput> run() override;

@@ -59,6 +59,8 @@ double calcYawRate(double velocity, double yaw, double wheelbase);
 
 std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, double interval);
 
+double limitSteerAngle(double steer_angle, double max_angle);
+
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware
