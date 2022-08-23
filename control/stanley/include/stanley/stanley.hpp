@@ -63,9 +63,9 @@ public:
   void setTrajectory(const std::vector<Pose> & trajectory);
   void setPose(const Pose & pose);
   void setOdom(const Odometry & odom);
-  void setK(const double k) { this->m_k = k; }
-  void setDistToFrAx(const double dist) { this->m_wheelbase_m = dist; }
-  void setKSoft(const double k) { this->m_k_soft = k; }
+  void setStanleyParams(
+    const double k, const double k_soft, const double k_d_yaw, const double k_d_steer);
+  void setWheelbase(const double dist) { this->m_wheelbase_m = dist; }
   void setCurrentSteering(const double current_steering) { this->m_curr_steer = current_steering; }
 
   bool isReady() const;

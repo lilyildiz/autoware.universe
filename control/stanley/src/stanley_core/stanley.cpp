@@ -39,6 +39,15 @@ void Stanley::setOdom(const Odometry & odom)
   *m_odom_ptr = odom;
 }
 
+void Stanley::setStanleyParams(
+  const double k, const double k_soft, const double k_d_yaw, const double k_d_steer)
+{
+  m_k = k;
+  m_k_soft = k_soft;
+  m_k_d_yaw = k_d_yaw;
+  m_k_d_steer = k_d_steer;
+}
+
 bool Stanley::isReady() const
 {
   return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr &&
@@ -52,11 +61,6 @@ std::pair<bool, double> Stanley::run()
     RCLCPP_ERROR(logger, "[Stanley]Inputs are not ready");
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
-  // temp
-  m_k = 0.13;
-  m_k_soft = 1.00;
-  m_k_d_yaw = 0.09;
-  m_k_d_steer = 0.05;
 
   // Append virtual points to trajectory
   const auto virtual_path = utils::createVirtualPath(*m_trajectory_ptr, m_wheelbase_m, 0.5);
@@ -106,6 +110,9 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "Steer damping: %f", steer_damp);
   RCLCPP_ERROR(logger, "Steering angle: %f", steering_angle);
   RCLCPP_ERROR(logger, "m_k: %f", m_k);
+  RCLCPP_ERROR(logger, "m_k_soft: %f", m_k_soft);
+  RCLCPP_ERROR(logger, "m_k_d_yaw: %f", m_k_d_yaw);
+  RCLCPP_ERROR(logger, "m_k_d_steer: %f", m_k_d_steer);
 
   return std::make_pair(true, steering_angle);
 }

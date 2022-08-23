@@ -29,7 +29,10 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
 
   // Parameters
   m_k = m_node->declare_parameter<double>("stanley_k", 1.0);
-  m_convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);
+  m_k_soft = m_node->declare_parameter<double>("stanley_k_soft", 0.0);
+  m_k_d_yaw = m_node->declare_parameter<double>("stanley_k_d_yaw", 0.0);
+  m_k_d_steer = m_node->declare_parameter<double>("stanley_k_d_steer", 0.0);
+  m_convergence_threshold = m_node->declare_parameter<double>("stanley_convergence_threshold", 0.1);
   m_max_steer_rad = m_node->declare_parameter<double>("max_steer_angle", 1.0);
 
   // Wait for pose
@@ -65,11 +68,11 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   }
 
   // Set Stanley inputs
-  m_stanley->setK(m_k);
+  m_stanley->setStanleyParams(m_k, m_k_soft, m_k_d_yaw, m_k_d_steer);
   m_stanley->setTrajectory(utils::extractPoses(*m_trajectory));
   m_stanley->setOdom(*m_odom);
   m_stanley->setPose(m_pose->pose);
-  m_stanley->setDistToFrAx(m_vehicle_info.wheel_base_m);
+  m_stanley->setWheelbase(m_vehicle_info.wheel_base_m);
   m_stanley->setCurrentSteering(m_steering_report->steering_tire_angle);
 
   // Run Stanley

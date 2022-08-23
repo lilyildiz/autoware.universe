@@ -93,6 +93,9 @@ private:
 
   // Parameters
   double m_k;
+  double m_k_soft;
+  double m_k_d_yaw;
+  double m_k_d_steer;
   double m_convergence_threshold;
   vehicle_info_util::VehicleInfo m_vehicle_info;
   double m_max_steer_rad;
