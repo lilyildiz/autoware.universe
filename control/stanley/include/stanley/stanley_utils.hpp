@@ -61,6 +61,8 @@ std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, 
 
 double limitSteerAngle(double steer_angle, double max_angle);
 
+size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold);
+
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware

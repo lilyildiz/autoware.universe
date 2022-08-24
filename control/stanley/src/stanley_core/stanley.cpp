@@ -73,6 +73,26 @@ std::pair<bool, double> Stanley::run()
   std::pair<size_t, double> closest_point =
     utils::calcClosestPoint(*m_trajectory_ptr, front_axle_pose);
 
+  // Calculate trajectory curvature
+  double curvature = 0.0;
+  size_t p2_index = utils::getNextIdxWithThr(*m_trajectory_ptr, closest_point.first, 2);
+  size_t p3_index = utils::getNextIdxWithThr(*m_trajectory_ptr, p2_index, 2);
+  if (
+    p2_index > m_trajectory_ptr->size() - 1 || p3_index > m_trajectory_ptr->size() - 1 ||
+    p2_index == p3_index) {
+    RCLCPP_ERROR(logger, "[Stanley]Trajectory is too short for curvature calculation");
+    curvature = std::numeric_limits<double>::quiet_NaN();
+  } else {
+    curvature = calcCurvature(
+      getPoint(m_trajectory_ptr->at(closest_point.first)), getPoint(m_trajectory_ptr->at(p2_index)),
+      getPoint(m_trajectory_ptr->at(p3_index)));
+  }
+
+  // Change parameters if curvature is too large
+  if (curvature > 0.01) {
+    m_k = m_k * 1.75;
+  }
+
   // Get heading error
   double vehicle_yaw = tf2::getYaw(front_axle_pose.orientation);
   double trajectory_yaw = tf2::getYaw(m_trajectory_ptr->at(closest_point.first).orientation);
@@ -113,6 +133,7 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "m_k_soft: %f", m_k_soft);
   RCLCPP_ERROR(logger, "m_k_d_yaw: %f", m_k_d_yaw);
   RCLCPP_ERROR(logger, "m_k_d_steer: %f", m_k_d_steer);
+  RCLCPP_ERROR(logger, "Path curvature: %f", curvature);
 
   return std::make_pair(true, steering_angle);
 }

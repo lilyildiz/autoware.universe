@@ -36,6 +36,8 @@
 
 using geometry_msgs::msg::Pose;
 using nav_msgs::msg::Odometry;
+using tier4_autoware_utils::calcCurvature;
+using tier4_autoware_utils::getPoint;
 
 namespace autoware
 {

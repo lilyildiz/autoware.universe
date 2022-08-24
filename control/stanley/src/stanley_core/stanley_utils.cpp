@@ -118,6 +118,18 @@ double limitSteerAngle(double steer_angle, double max_angle)
   return steer_angle;
 }
 
+size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold)
+{
+  size_t next_index = starting_index+1;
+  while (next_index < path.size() - 2) {
+    if (euclideanDistance(path.at(starting_index), path.at(next_index)) > threshold) {
+      break;
+    }
+    next_index++;
+  }
+  return next_index;
+}
+
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware
