@@ -41,26 +41,90 @@ namespace stanley
 {
 namespace utils
 {
+/**
+ * @brief normalize the angle to [-pi, pi]
+ * @param angle the angle to be normalized
+ * @return the normalized angle
+ */
 double normalizeEulerAngle(const double euler);
 
+/**
+ * @brief calculate the heading angle from pose1 to pose2
+ * @param pose1 first pose
+ * @param pose2 second pose
+ * @return heading angle from pose1 to pose2
+ */
 double calcHeading(const Pose & pose1, const Pose & pose2);
 
+/**
+ * @brief calculate the closest point on a trajectory to a given pose
+ * @param trajectory the trajectory to be evaluated
+ * @param pose the pose to be evaluated
+ * @return index of the closest point on the trajectory to the given pose and the distance to the
+ * closest point
+ */
 std::pair<size_t, double> calcClosestPoint(std::vector<Pose> & trajectory, Pose & pose);
 
+/**
+ * @brief calculate the euclidean distance between two poses
+ * @param pose1 first pose
+ * @param pose2 second pose
+ * @return the euclidean distance between the two poses
+ */
 double euclideanDistance(const Pose & pose1, const Pose & pose2);
 
+/**
+ * @brief wait for a transform from one frame to another
+ * @param tf_buffer the tf2 buffer
+ * @param from the frame to transform from
+ * @param to the frame to transform to
+ * @param logger the logger to use
+ * @return the transform
+ */
 geometry_msgs::msg::TransformStamped waitForTransform(
   const tf2_ros::Buffer & tf_buffer, const std::string & from, const std::string & to,
   rclcpp::Logger & logger);
 
+/**
+ * @brief get Pose vector from a Trajectory
+ * @param trajectory
+ * @return Pose vector
+ */
 std::vector<Pose> extractPoses(const Trajectory & trajectory);
 
+/**
+ * @brief calculate yaw rate
+ * @param velocity velocity
+ * @param yaw yaw
+ * @param wheelbase wheelbase
+ * @return yaw rate
+ */
 double calcYawRate(double velocity, double yaw, double wheelbase);
 
+/**
+ * @brief create a virtual path with the length of the wheelbase at the end of the trajectory
+ * @param path the path to be extended
+ * @param wheelbase the wheelbase of the vehicle
+ * @param interval waypoint interval
+ * @return virtual path
+ */
 std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, double interval);
 
+/**
+ * @brief limit steering angle
+ * @param steer_angle the steering angle to be limited
+ * @param max_angle the maximum steering angle
+ * @return final steering angle
+ */
 double limitSteerAngle(double steer_angle, double max_angle);
 
+/**
+ * @brief get a point [threshold] meters ahead of the [starting_index] point on the [trajectory]
+ * @param path the path to be evaluated
+ * @param starting_index the index of the starting point
+ * @param threshold the threshold distance
+ * @return index of the calculated point
+ */
 size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold);
 
 }  // namespace utils
