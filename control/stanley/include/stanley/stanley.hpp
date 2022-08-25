@@ -46,48 +46,110 @@ namespace stanley
 
 struct Params
 {
+  //!< @brief stanley cross track gain for straights
   double k_straight;
+  //!< @brief stanley cross track gain for turns
   double k_turn;
+  //!< @brief stanley gain for low speed
   double k_soft;
+  //!< @brief stanley gain for negative yaw rate feedback
   double k_d_yaw;
+  //!< @brief stanley gain for steer damping
   double k_d_steer;
+  //!< @brief vehicle wheelbase[m]
   double wheelbase_m;
+  //!< @brief curvature threshold for turns
   double curvature_threshold;
+  //!< @brief point-to-point distance used in curvature calculation
   double curvature_calc_dist;
+  //!< @brief convergence threshold for stanley controller[m]
   double convergence_threshold;
+  //!< @brief maximum steering angle[rad]
   double max_steer_rad;
 };
 
+/**
+ * Stanley waypoints follower class
+ * @brief calculate steering angle to follow reference trajectory
+ */
 class Stanley
 {
 public:
-  Stanley() : m_curr_steer(0.0), m_prev_steer(0.0) {}
+  /**
+   * @brief constructor
+   */
+  Stanley()= default;
+
+  /**
+   * @brief destructor
+   */
   ~Stanley() = default;
 
-  rclcpp::Logger logger = rclcpp::get_logger("stanley");
-
-  // Input setters
+  /* Input setters */
+  /**
+   * @brief set current trajectory
+   * @param trajectory current trajectory
+   */
   void setTrajectory(const std::vector<Pose> & trajectory);
+
+  /**
+   * @brief set current pose
+   * @param pose current pose
+   */
   void setPose(const Pose & pose);
+
+  /**
+   * @brief set current odometry
+   * @param odom current odometry
+   */
   void setOdom(const Odometry & odom);
+
+  /**
+   * @brief set stanley algorithm parameters
+   * @param params stanley algorithm parameters
+   */
   void setParams(const Params & params) { m_params = params; }
+
+  /**
+   * @brief set current steering angle
+   * @param steer current steering angle
+   */
   void setCurrentSteering(const double current_steering) { this->m_curr_steer = current_steering; }
 
+  /* Compute */
+  /**
+   * @brief check input data
+   * @return bool true if input data is ready
+   */
   bool isReady() const;
+
+  /**
+   * @brief compute stanley steering angle
+   * @return stanley steering angle
+   */
   std::pair<bool, double> run();
 
 private:
-  // Parameters
-  Params m_params;
+  /* Parameters */
+  //!< @brief stanley algorithm parameters
+  Params m_params{};
 
-  // State
-  double m_curr_steer;
-  double m_prev_steer;
+  /* State */
+  //!< @brief current steering angle
+  double m_curr_steer{0.0};
+  //!< @brief previous steering angle
+  double m_prev_steer{0.0};
 
-  // Inputs
+  /* Inputs */
+  //!< @brief current trajectory
   std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;
+  //!< @brief current pose
   std::shared_ptr<Pose> m_pose_ptr;
+  //!< @brief current odometry
   std::shared_ptr<Odometry> m_odom_ptr;
+
+  //!< @brief ROS logger used for debug logging
+  rclcpp::Logger logger = rclcpp::get_logger("stanley");
 };
 
 }  // namespace stanley
