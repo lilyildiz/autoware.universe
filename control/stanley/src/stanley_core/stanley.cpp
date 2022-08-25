@@ -16,6 +16,8 @@
 
 #include "stanley/stanley.hpp"
 
+#include <math.h>
+
 namespace autoware
 {
 namespace stanley
@@ -39,19 +41,10 @@ void Stanley::setOdom(const Odometry & odom)
   *m_odom_ptr = odom;
 }
 
-void Stanley::setStanleyParams(
-  const double k, const double k_soft, const double k_d_yaw, const double k_d_steer)
-{
-  m_k = k;
-  m_k_soft = k_soft;
-  m_k_d_yaw = k_d_yaw;
-  m_k_d_steer = k_d_steer;
-}
-
 bool Stanley::isReady() const
 {
   return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr &&
-         m_wheelbase_m != 0.0;
+         m_params.wheelbase_m != 0.0;
 }
 
 std::pair<bool, double> Stanley::run()
@@ -63,11 +56,12 @@ std::pair<bool, double> Stanley::run()
   }
 
   // Append virtual points to trajectory
-  const auto virtual_path = utils::createVirtualPath(*m_trajectory_ptr, m_wheelbase_m, 0.5);
+  const auto virtual_path = utils::createVirtualPath(*m_trajectory_ptr, m_params.wheelbase_m, 0.5);
   m_trajectory_ptr->insert(m_trajectory_ptr->end(), virtual_path.begin(), virtual_path.end());
 
   // Get front axle pose
-  Pose front_axle_pose = tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_wheelbase_m, 0.0, 0.0);
+  Pose front_axle_pose =
+    tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_params.wheelbase_m, 0.0, 0.0);
 
   // Get the closest point to front axle
   std::pair<size_t, double> closest_point =
@@ -75,8 +69,10 @@ std::pair<bool, double> Stanley::run()
 
   // Calculate trajectory curvature
   double curvature = 0.0;
-  size_t p2_index = utils::getNextIdxWithThr(*m_trajectory_ptr, closest_point.first, 2);
-  size_t p3_index = utils::getNextIdxWithThr(*m_trajectory_ptr, p2_index, 2);
+  size_t p2_index =
+    utils::getNextIdxWithThr(*m_trajectory_ptr, closest_point.first, m_params.curvature_calc_dist);
+  size_t p3_index =
+    utils::getNextIdxWithThr(*m_trajectory_ptr, p2_index, m_params.curvature_calc_dist);
   if (
     p2_index > m_trajectory_ptr->size() - 1 || p3_index > m_trajectory_ptr->size() - 1 ||
     p2_index == p3_index) {
@@ -86,11 +82,6 @@ std::pair<bool, double> Stanley::run()
     curvature = calcCurvature(
       getPoint(m_trajectory_ptr->at(closest_point.first)), getPoint(m_trajectory_ptr->at(p2_index)),
       getPoint(m_trajectory_ptr->at(p3_index)));
-  }
-
-  // Change parameters if curvature is too large
-  if (curvature > 0.01) {
-    m_k = m_k * 1.75;
   }
 
   // Get heading error
@@ -105,18 +96,23 @@ std::pair<bool, double> Stanley::run()
   double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
 
+  // Set cross track gain according to curvature and calculate cross track yaw error
+  double k = m_params.k_straight;
+  if (curvature > m_params.curvature_threshold) {
+    k = m_params.k_turn;
+  }
   double cross_track_yaw_error =
-    atan(m_k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + m_k_soft));
+    atan(k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + m_params.k_soft));
 
   // Negative feedback on yaw rate
   double measured_yaw_rate =
-    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, vehicle_yaw, m_wheelbase_m);
+    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, vehicle_yaw, m_params.wheelbase_m);
   double trajectory_yaw_rate =
-    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, trajectory_yaw, m_wheelbase_m);
-  double yaw_feedback = m_k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
+    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, trajectory_yaw, m_params.wheelbase_m);
+  double yaw_feedback = m_params.k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
   // Steer damping
-  double steer_damp = m_k_d_steer * (m_prev_steer - m_curr_steer);
+  double steer_damp = m_params.k_d_steer * (m_prev_steer - m_curr_steer);
 
   // Calculate the steering angle
   double steering_angle = utils::normalizeEulerAngle(
@@ -129,10 +125,12 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "Yaw feedback: %f", yaw_feedback);
   RCLCPP_ERROR(logger, "Steer damping: %f", steer_damp);
   RCLCPP_ERROR(logger, "Steering angle: %f", steering_angle);
-  RCLCPP_ERROR(logger, "m_k: %f", m_k);
-  RCLCPP_ERROR(logger, "m_k_soft: %f", m_k_soft);
-  RCLCPP_ERROR(logger, "m_k_d_yaw: %f", m_k_d_yaw);
-  RCLCPP_ERROR(logger, "m_k_d_steer: %f", m_k_d_steer);
+  RCLCPP_ERROR(logger, "m_k_straight: %f", m_params.k_straight);
+  RCLCPP_ERROR(logger, "m_k_turn: %f", m_params.k_turn);
+  RCLCPP_ERROR(logger, "k: %f", k);
+  RCLCPP_ERROR(logger, "m_k_soft: %f", m_params.k_soft);
+  RCLCPP_ERROR(logger, "m_k_d_yaw: %f", m_params.k_d_yaw);
+  RCLCPP_ERROR(logger, "m_k_d_steer: %f", m_params.k_d_steer);
   RCLCPP_ERROR(logger, "Path curvature: %f", curvature);
 
   return std::make_pair(true, steering_angle);

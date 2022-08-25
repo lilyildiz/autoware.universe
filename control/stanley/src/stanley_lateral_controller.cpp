@@ -28,21 +28,22 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   m_stanley = std::make_unique<Stanley>();
 
   // Parameters
-  m_k = m_node->declare_parameter<double>("stanley_k", 1.0);
-  m_k_soft = m_node->declare_parameter<double>("stanley_k_soft", 0.0);
-  m_k_d_yaw = m_node->declare_parameter<double>("stanley_k_d_yaw", 0.0);
-  m_k_d_steer = m_node->declare_parameter<double>("stanley_k_d_steer", 0.0);
-  m_convergence_threshold = m_node->declare_parameter<double>("stanley_convergence_threshold", 0.1);
-  m_max_steer_rad = m_node->declare_parameter<double>("max_steer_angle", 1.0);
+  m_params.k_straight = m_node->declare_parameter("k_straight", 0.0);
+  m_params.k_turn = m_node->declare_parameter<double>("k_turn", 0.0);
+  m_params.k_soft = m_node->declare_parameter<double>("k_soft", 0.0);
+  m_params.k_d_yaw = m_node->declare_parameter<double>("k_d_yaw", 0.0);
+  m_params.k_d_steer = m_node->declare_parameter<double>("k_d_steer", 0.0);
+  m_params.curvature_threshold = m_node->declare_parameter<double>("curvature_threshold", 0.0);
+  m_params.curvature_calc_dist = m_node->declare_parameter<double>("curvature_calc_dist", 0.0);
+  m_params.convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);
+  m_params.max_steer_rad = m_node->declare_parameter<double>("max_steer_angle", 1.0);
+  m_params.wheelbase_m = vehicle_info_util::VehicleInfoUtil(*m_node).getVehicleInfo().wheel_base_m;
 
   // Wait for pose
   utils::waitForTransform(m_tf_buffer, "map", "base_link", logger);
-
-  // Vehicle Parameters
-  m_vehicle_info = vehicle_info_util::VehicleInfoUtil(*m_node).getVehicleInfo();
 }
 
-StanleyLateralController::~StanleyLateralController() {}
+StanleyLateralController::~StanleyLateralController() = default;
 
 void StanleyLateralController::setInputData(const InputData & input_data)
 {
@@ -68,11 +69,11 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   }
 
   // Set Stanley inputs
-  m_stanley->setStanleyParams(m_k, m_k_soft, m_k_d_yaw, m_k_d_steer);
+
   m_stanley->setTrajectory(utils::extractPoses(*m_trajectory));
   m_stanley->setOdom(*m_odom);
   m_stanley->setPose(m_pose->pose);
-  m_stanley->setWheelbase(m_vehicle_info.wheel_base_m);
+  m_stanley->setParams(m_params);
   m_stanley->setCurrentSteering(m_steering_report->steering_tire_angle);
 
   // Run Stanley
@@ -86,14 +87,14 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   AckermannLateralCommand control_command;
   control_command.stamp = m_node->get_clock()->now();
   control_command.steering_tire_angle =
-    static_cast<float>(utils::limitSteerAngle(stanley_result.second, m_max_steer_rad));
+    static_cast<float>(utils::limitSteerAngle(stanley_result.second, m_params.max_steer_rad));
 
   // Generate output
   LateralOutput output;
   output.control_cmd = control_command;
   output.sync_data.is_steer_converged =
     std::abs(control_command.steering_tire_angle - m_steering_report->steering_tire_angle) <
-    m_convergence_threshold;
+    m_params.convergence_threshold;
 
   return output;
 }

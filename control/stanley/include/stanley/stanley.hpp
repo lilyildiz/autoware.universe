@@ -44,19 +44,24 @@ namespace autoware
 namespace stanley
 {
 
+struct Params
+{
+  double k_straight;
+  double k_turn;
+  double k_soft;
+  double k_d_yaw;
+  double k_d_steer;
+  double wheelbase_m;
+  double curvature_threshold;
+  double curvature_calc_dist;
+  double convergence_threshold;
+  double max_steer_rad;
+};
+
 class Stanley
 {
 public:
-  Stanley()
-  : m_k(0.0),
-    m_k_soft(0.0),
-    m_k_d_yaw(0.0),
-    m_k_d_steer(0.0),
-    m_wheelbase_m(0.0),
-    m_curr_steer(0.0),
-    m_prev_steer(0.0)
-  {
-  }
+  Stanley() : m_curr_steer(0.0), m_prev_steer(0.0) {}
   ~Stanley() = default;
 
   rclcpp::Logger logger = rclcpp::get_logger("stanley");
@@ -65,24 +70,21 @@ public:
   void setTrajectory(const std::vector<Pose> & trajectory);
   void setPose(const Pose & pose);
   void setOdom(const Odometry & odom);
-  void setStanleyParams(
-    const double k, const double k_soft, const double k_d_yaw, const double k_d_steer);
-  void setWheelbase(const double dist) { this->m_wheelbase_m = dist; }
+  void setParams(const Params & params) { m_params = params; }
   void setCurrentSteering(const double current_steering) { this->m_curr_steer = current_steering; }
 
   bool isReady() const;
   std::pair<bool, double> run();
 
 private:
-  // k The gain of the stanley controller.
-  double m_k;
-  double m_k_soft;
-  double m_k_d_yaw;
-  double m_k_d_steer;
-  double m_wheelbase_m;
+  // Parameters
+  Params m_params;
+
+  // State
   double m_curr_steer;
   double m_prev_steer;
 
+  // Inputs
   std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;
   std::shared_ptr<Pose> m_pose_ptr;
   std::shared_ptr<Odometry> m_odom_ptr;
