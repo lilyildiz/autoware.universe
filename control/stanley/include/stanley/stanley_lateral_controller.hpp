@@ -64,38 +64,54 @@ public:
    */
   virtual ~StanleyLateralController();
 
-private:
-  // Node
-  rclcpp::Node::SharedPtr m_node;
-  rclcpp::Logger logger = rclcpp::get_logger("stanley");
   /**
    * @brief check input data
    */
   bool isReady();
 
-  // Input data
-  Trajectory::ConstSharedPtr m_trajectory;
-  Odometry::ConstSharedPtr m_odom;
-  SteeringReport::ConstSharedPtr m_steering_report;
   /**
    * @brief set input data
    */
   void setInputData(InputData const & input_data) override;
 
-  // TF
+  /**
+   * @brief computing function
+   */
+  boost::optional<LateralOutput> run() override;
+
+private:
+  /* ROS */
+  //!< @brief ROS node handle
+  rclcpp::Node::SharedPtr m_node;
+  //!< @brief ROS logger used for debug logging
+  rclcpp::Logger logger = rclcpp::get_logger("stanley");
+
+  /* Inputs */
+  //!< @brief current trajectory
+  Trajectory::ConstSharedPtr m_trajectory;
+  //!< @brief current odometry
+  Odometry::ConstSharedPtr m_odom;
+  //!< @brief current steering report
+  SteeringReport::ConstSharedPtr m_steering_report;
+
+  /* TF */
+  //!< @brief TF buffer
   tf2_ros::Buffer m_tf_buffer;
+  //!< @brief TF listener
   tf2_ros::TransformListener m_tf_listener;
+  //!< @brief self pose listener
   tier4_autoware_utils::SelfPoseListener m_pose_listener;
+  //!< @brief current vehicle pose
   PoseStamped::ConstSharedPtr m_pose;
 
-  // Algorithm
+  /* Algorithm */
+  //!< @brief Stanley algorithm object
   std::unique_ptr<Stanley> m_stanley;
 
-  // Parameters
+  /* Parameters */
+  //!< @brief stanley parameters
   Params m_params;
 
-  // Compute
-  boost::optional<LateralOutput> run() override;
 };
 }  // namespace stanley
 }  // namespace autoware
