@@ -59,6 +59,13 @@ std::pair<bool, double> Stanley::run()
   const auto virtual_path = utils::createVirtualPath(*m_trajectory_ptr, m_params.wheelbase_m, 0.5);
   m_trajectory_ptr->insert(m_trajectory_ptr->end(), virtual_path.begin(), virtual_path.end());
 
+  // Path smoothing
+  if (m_params.enable_path_smoothing) {
+    const auto smoothed_path =
+      utils::smoothPath(*m_trajectory_ptr, m_params.path_filter_moving_ave_num);
+    m_trajectory_ptr->assign(smoothed_path.begin(), smoothed_path.end());
+  }
+
   // Get front axle pose
   Pose front_axle_pose =
     tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_params.wheelbase_m, 0.0, 0.0);
@@ -132,6 +139,8 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "m_k_d_yaw: %f", m_params.k_d_yaw);
   RCLCPP_ERROR(logger, "m_k_d_steer: %f", m_params.k_d_steer);
   RCLCPP_ERROR(logger, "Path curvature: %f", curvature);
+  RCLCPP_ERROR(logger, "Enable path smoothing: %d", m_params.enable_path_smoothing);
+  RCLCPP_ERROR(logger, "Path filter moving average: %ld", m_params.path_filter_moving_ave_num);
 
   return std::make_pair(true, steering_angle);
 }

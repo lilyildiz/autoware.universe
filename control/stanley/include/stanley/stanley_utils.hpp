@@ -24,6 +24,7 @@
 #include "motion_utils/resample/resample.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
+#include "trajectory_follower/lowpass_filter.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <tier4_autoware_utils/tier4_autoware_utils.hpp>
@@ -32,6 +33,7 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
+using autoware::motion::control::trajectory_follower::MoveAverageFilter::filt_vector;
 using autoware_auto_planning_msgs::msg::Trajectory;
 using geometry_msgs::msg::Pose;
 
@@ -126,6 +128,14 @@ double limitSteerAngle(double steer_angle, double max_angle);
  * @return index of the calculated point
  */
 size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold);
+
+/**
+ * @brief path smoothing
+ * @param path the path to be smoothed
+ * @param path_filter_moving_ave_num index distance of the moving average filter
+ * @return smoothed path
+ */
+std::vector<Pose> smoothPath(std::vector<Pose> & path, int64_t path_filter_moving_ave_num);
 
 }  // namespace utils
 }  // namespace stanley

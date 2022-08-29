@@ -120,7 +120,7 @@ double limitSteerAngle(double steer_angle, double max_angle)
 
 size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold)
 {
-  size_t next_index = starting_index+1;
+  size_t next_index = starting_index + 1;
   while (next_index < path.size() - 2) {
     if (euclideanDistance(path.at(starting_index), path.at(next_index)) > threshold) {
       break;
@@ -128,6 +128,52 @@ size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, doub
     next_index++;
   }
   return next_index;
+}
+
+std::vector<Pose> smoothPath(std::vector<Pose> & path, int64_t path_filter_moving_ave_num)
+{
+  std::vector<Pose> smoothed_path = path;
+  // Vectorize path
+  std::vector<double> x_vector;
+  std::vector<double> y_vector;
+  for (auto & pose : path) {
+    x_vector.push_back(pose.position.x);
+    y_vector.push_back(pose.position.y);
+  }
+
+  // Path Smoothing
+  if (path.size() > static_cast<size_t>(2 * path_filter_moving_ave_num)) {
+    if (
+      !filt_vector(path_filter_moving_ave_num, x_vector) ||
+      !filt_vector(path_filter_moving_ave_num, y_vector)) {
+      RCLCPP_ERROR(rclcpp::get_logger("stanley_utils"), "Path smoothing failed");
+      return smoothed_path;
+    }
+  }
+
+  // Convert back to Pose
+  for (size_t i = 0; i < smoothed_path.size(); i++) {
+    smoothed_path.at(i).position.x = x_vector.at(i);
+    smoothed_path.at(i).position.y = y_vector.at(i);
+  }
+
+  // Get driving direction
+  const auto is_forward_shift =
+    tier4_autoware_utils::isDrivingForward(smoothed_path.at(0), smoothed_path.at(1));
+
+  // Recalculate orientation from heading
+  for (size_t i = 1; i < static_cast<size_t>(smoothed_path.size()) - 1; ++i) {
+    const double dx = smoothed_path[(i + 1)].position.x - smoothed_path[(i - 1)].position.x;
+    const double dy = smoothed_path[(i + 1)].position.y - smoothed_path[(i - 1)].position.y;
+    double heading = is_forward_shift ? std::atan2(dy, dx) : std::atan2(dy, dx) + M_PI;
+    smoothed_path[(i)].orientation = tier4_autoware_utils::createQuaternionFromYaw(heading);
+  }
+  if (smoothed_path.size() > 1) {
+    smoothed_path[0].orientation = smoothed_path[1].orientation;
+    smoothed_path.back().orientation = smoothed_path[smoothed_path.size() - 2].orientation;
+  }
+
+  return smoothed_path;
 }
 
 }  // namespace utils

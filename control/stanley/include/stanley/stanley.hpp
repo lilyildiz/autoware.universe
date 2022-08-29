@@ -66,6 +66,10 @@ struct Params
   double convergence_threshold;
   //!< @brief maximum steering angle[rad]
   double max_steer_rad;
+  //!< @brief path smoothing flag
+  bool enable_path_smoothing;
+  //!< @brief index distance of the moving average filter
+  int64_t path_filter_moving_ave_num;
 };
 
 /**
@@ -78,7 +82,7 @@ public:
   /**
    * @brief constructor
    */
-  Stanley()= default;
+  Stanley() = default;
 
   /**
    * @brief destructor

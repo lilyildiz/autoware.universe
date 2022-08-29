@@ -38,6 +38,9 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   m_params.convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);
   m_params.max_steer_rad = m_node->declare_parameter<double>("max_steer_angle", 1.0);
   m_params.wheelbase_m = vehicle_info_util::VehicleInfoUtil(*m_node).getVehicleInfo().wheel_base_m;
+  m_params.enable_path_smoothing = m_node->declare_parameter<bool>("enable_path_smoothing", false);
+  m_params.path_filter_moving_ave_num =
+    m_node->declare_parameter<int64_t>("path_filter_moving_ave_num", 5);
 
   // Wait for pose
   utils::waitForTransform(m_tf_buffer, "map", "base_link", logger);
