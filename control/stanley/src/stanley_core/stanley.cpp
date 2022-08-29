@@ -105,7 +105,7 @@ std::pair<bool, double> Stanley::run()
 
   // Set cross track gain according to curvature and calculate cross track yaw error
   double k = m_params.k_straight;
-  if (curvature > m_params.curvature_threshold) {
+  if (fabs(curvature) > m_params.curvature_threshold) {
     k = m_params.k_turn;
   }
   double cross_track_yaw_error =
