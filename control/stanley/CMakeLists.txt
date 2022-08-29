@@ -39,3 +39,4 @@ rclcpp_components_register_node(stanley_lateral_controller
         EXECUTABLE stanley_lateral_controller_exe
         )
 
+ament_auto_package(INSTALL_TO_SHARE)
