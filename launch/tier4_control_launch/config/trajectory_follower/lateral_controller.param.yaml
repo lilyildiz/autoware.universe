@@ -77,8 +77,11 @@
     k_straight: 0.13           # stanley cross-track gain for straights
     k_turn: 0.22               # stanley cross-track gain for turns
     k_soft: 1.00               # stanley gain for low speed
-    k_d_yaw: -0.09              # stanley gain for negative yaw rate feedback
+    k_d_yaw: -0.09             # stanley gain for negative yaw rate feedback
     k_d_steer: 0.25            # stanley gain for steer damping
+    reverse_k: 4.30            # stanley cross-track gain for reverse gear
+    reverse_k_soft: -1.00      # stanley gain for low speed in reverse gear
+    reverse_k_d_yaw: 1.00      # stanley gain for negative yaw rate feedback for reverse gear
     curvature_threshold: 0.01  # curvature threshold for turns
     curvature_calc_dist: 2.00  # point-to-point distance used in curvature calculation
     convergence_threshold: 0.1 # convergence threshold for stanley controller
