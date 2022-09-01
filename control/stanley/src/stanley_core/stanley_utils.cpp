@@ -130,7 +130,8 @@ size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, doub
   return next_index;
 }
 
-std::vector<Pose> smoothPath(std::vector<Pose> & path, int64_t path_filter_moving_ave_num)
+std::vector<Pose> smoothPath(
+  std::vector<Pose> & path, int64_t path_filter_moving_ave_num, bool is_forward)
 {
   std::vector<Pose> smoothed_path = path;
   // Vectorize path
@@ -157,15 +158,11 @@ std::vector<Pose> smoothPath(std::vector<Pose> & path, int64_t path_filter_movin
     smoothed_path.at(i).position.y = y_vector.at(i);
   }
 
-  // Get driving direction
-  const auto is_forward_shift =
-    tier4_autoware_utils::isDrivingForward(smoothed_path.at(0), smoothed_path.at(1));
-
   // Recalculate orientation from heading
   for (size_t i = 1; i < static_cast<size_t>(smoothed_path.size()) - 1; ++i) {
     const double dx = smoothed_path[(i + 1)].position.x - smoothed_path[(i - 1)].position.x;
     const double dy = smoothed_path[(i + 1)].position.y - smoothed_path[(i - 1)].position.y;
-    double heading = is_forward_shift ? std::atan2(dy, dx) : std::atan2(dy, dx) + M_PI;
+    double heading = is_forward ? std::atan2(dy, dx) : std::atan2(dy, dx) + M_PI;
     smoothed_path[(i)].orientation = tier4_autoware_utils::createQuaternionFromYaw(heading);
   }
   if (smoothed_path.size() > 1) {

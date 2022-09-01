@@ -33,6 +33,9 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   m_params.k_soft = m_node->declare_parameter<double>("k_soft", 0.0);
   m_params.k_d_yaw = m_node->declare_parameter<double>("k_d_yaw", 0.0);
   m_params.k_d_steer = m_node->declare_parameter<double>("k_d_steer", 0.0);
+  m_params.reverse_k = m_node->declare_parameter<double>("reverse_k", 0.0);
+  m_params.reverse_k_soft = m_node->declare_parameter<double>("reverse_k_soft", 0.0);
+  m_params.reverse_k_d_yaw = m_node->declare_parameter<double>("reverse_k_d_yaw", 0.0);
   m_params.curvature_threshold = m_node->declare_parameter<double>("curvature_threshold", 0.0);
   m_params.curvature_calc_dist = m_node->declare_parameter<double>("curvature_calc_dist", 0.0);
   m_params.convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);

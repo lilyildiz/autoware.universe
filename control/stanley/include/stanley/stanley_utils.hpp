@@ -133,9 +133,11 @@ size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, doub
  * @brief path smoothing
  * @param path the path to be smoothed
  * @param path_filter_moving_ave_num index distance of the moving average filter
+ * @param is_forward true if the path is forward
  * @return smoothed path
  */
-std::vector<Pose> smoothPath(std::vector<Pose> & path, int64_t path_filter_moving_ave_num);
+std::vector<Pose> smoothPath(
+  std::vector<Pose> & path, int64_t path_filter_moving_ave_num, bool is_forward);
 
 }  // namespace utils
 }  // namespace stanley

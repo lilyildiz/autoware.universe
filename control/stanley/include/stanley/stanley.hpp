@@ -56,6 +56,12 @@ struct Params
   double k_d_yaw;
   //!< @brief stanley gain for steer damping
   double k_d_steer;
+  //!< @brief stanley cross track gain for reverse gear
+  double reverse_k;
+  //!< @brief stanley gain for low speed in reverse gear
+  double reverse_k_soft;
+  //!< @brief stanley gain for negative yaw rate feedback for reverse gear
+  double reverse_k_d_yaw;
   //!< @brief vehicle wheelbase[m]
   double wheelbase_m;
   //!< @brief curvature threshold for turns
