@@ -24,6 +24,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <stanley/stanley_utils.hpp>
 #include <tier4_autoware_utils/tier4_autoware_utils.hpp>
+#include "motion_velocity_smoother/trajectory_utils.hpp"
+#include "motion_utils/trajectory/tmp_conversion.hpp"
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -38,6 +40,8 @@ using geometry_msgs::msg::Pose;
 using nav_msgs::msg::Odometry;
 using tier4_autoware_utils::calcCurvature;
 using tier4_autoware_utils::getPoint;
+using autoware_auto_planning_msgs::msg::Trajectory;
+using motion_velocity_smoother::trajectory_utils::calcTrajectoryCurvatureFrom3Points;
 
 namespace autoware
 {
@@ -66,8 +70,8 @@ struct Params
   double wheelbase_m;
   //!< @brief curvature threshold for turns
   double curvature_threshold;
-  //!< @brief point-to-point distance used in curvature calculation
-  double curvature_calc_dist;
+  //!< @brief index distance used in curvature calculation
+  int64_t curvature_calc_index;
   //!< @brief convergence threshold for stanley controller[m]
   double convergence_threshold;
   //!< @brief maximum steering angle[rad]
@@ -100,7 +104,7 @@ public:
    * @brief set current trajectory
    * @param trajectory current trajectory
    */
-  void setTrajectory(const std::vector<Pose> & trajectory);
+  void setTrajectory(const Trajectory & trajectory);
 
   /**
    * @brief set current pose
@@ -152,7 +156,7 @@ private:
 
   /* Inputs */
   //!< @brief current trajectory
-  std::shared_ptr<std::vector<Pose>> m_trajectory_ptr;
+  std::shared_ptr<Trajectory> m_trajectory_ptr;
   //!< @brief current pose
   std::shared_ptr<Pose> m_pose_ptr;
   //!< @brief current odometry

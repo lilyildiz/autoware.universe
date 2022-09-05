@@ -18,6 +18,8 @@
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>trajectory_follower</depend>
+  <depend>motion_velocity_smoother</depend>
+  <depend>motion_utils</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

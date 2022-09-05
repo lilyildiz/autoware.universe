@@ -173,6 +173,26 @@ std::vector<Pose> smoothPath(
   return smoothed_path;
 }
 
+Trajectory appendToTrajectory(std::vector<Pose> & poses, Trajectory & trajectory)
+{
+  Trajectory output = trajectory;
+  for (auto & pose : poses) {
+    TrajectoryPoint temp_point = trajectory.points.back();
+    temp_point.pose = pose;
+    output.points.push_back(temp_point);
+  }
+  return output;
+}
+
+Trajectory updateTrajectoryFromPoses(std::vector<Pose> & poses, Trajectory & trajectory)
+{
+  Trajectory output = trajectory;
+  for (size_t i = 0; i < poses.size(); i++) {
+    output.points.at(i).pose = poses.at(i);
+  }
+  return output;
+}
+
 }  // namespace utils
 }  // namespace stanley
 }  // namespace autoware

@@ -23,9 +23,9 @@ namespace autoware
 namespace stanley
 {
 
-void Stanley::setTrajectory(const std::vector<Pose> & trajectory)
+void Stanley::setTrajectory(const Trajectory & trajectory)
 {
-  m_trajectory_ptr = std::make_shared<std::vector<Pose>>();
+  m_trajectory_ptr = std::make_shared<Trajectory>();
   *m_trajectory_ptr = trajectory;
 }
 
@@ -55,22 +55,25 @@ std::pair<bool, double> Stanley::run()
     return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
   }
 
+  // Extract poses from trajectory
+  std::vector<Pose> pose_vector = utils::extractPoses(*m_trajectory_ptr);
+
   // Get driving direction
   const auto is_forward_shift =
-    tier4_autoware_utils::isDrivingForward(m_trajectory_ptr->at(0), m_trajectory_ptr->at(1));
+    tier4_autoware_utils::isDrivingForward(pose_vector.at(0), pose_vector.at(1));
 
   // Append virtual points to trajectory
+  std::vector<Pose> virtual_path;
   if (is_forward_shift) {
-    const auto virtual_path =
-      utils::createVirtualPath(*m_trajectory_ptr, m_params.wheelbase_m, 0.5);
-    m_trajectory_ptr->insert(m_trajectory_ptr->end(), virtual_path.begin(), virtual_path.end());
+    virtual_path = utils::createVirtualPath(pose_vector, m_params.wheelbase_m, 0.5);
+    pose_vector.insert(pose_vector.end(), virtual_path.begin(), virtual_path.end());
   }
 
   // Path smoothing
   if (m_params.enable_path_smoothing) {
     const auto smoothed_path =
-      utils::smoothPath(*m_trajectory_ptr, m_params.path_filter_moving_ave_num, is_forward_shift);
-    m_trajectory_ptr->assign(smoothed_path.begin(), smoothed_path.end());
+      utils::smoothPath(pose_vector, m_params.path_filter_moving_ave_num, is_forward_shift);
+    pose_vector.assign(smoothed_path.begin(), smoothed_path.end());
   }
 
   // Get front axle pose
@@ -81,45 +84,34 @@ std::pair<bool, double> Stanley::run()
   Pose steering_pose = is_forward_shift ? front_axle_pose : *m_pose_ptr;
 
   // Get the closest point to front axle
-  std::pair<size_t, double> closest_point =
-    utils::calcClosestPoint(*m_trajectory_ptr, steering_pose);
+  std::pair<size_t, double> closest_point = utils::calcClosestPoint(pose_vector, steering_pose);
 
   // Calculate trajectory curvature
-  double curvature = 0.0;
-  size_t p2_index =
-    utils::getNextIdxWithThr(*m_trajectory_ptr, closest_point.first, m_params.curvature_calc_dist);
-  size_t p3_index =
-    utils::getNextIdxWithThr(*m_trajectory_ptr, p2_index, m_params.curvature_calc_dist);
-  if (
-    p2_index > m_trajectory_ptr->size() - 1 || p3_index > m_trajectory_ptr->size() - 1 ||
-    p2_index == p3_index) {
-    RCLCPP_ERROR(logger, "[Stanley]Trajectory is too short for curvature calculation");
-    curvature = std::numeric_limits<double>::quiet_NaN();
-  } else {
-    curvature = calcCurvature(
-      getPoint(m_trajectory_ptr->at(closest_point.first)), getPoint(m_trajectory_ptr->at(p2_index)),
-      getPoint(m_trajectory_ptr->at(p3_index)));
-  }
+  auto trajectory_appended = utils::appendToTrajectory(virtual_path, *m_trajectory_ptr);
+  trajectory_appended = utils::updateTrajectoryFromPoses(pose_vector, trajectory_appended);
+  const auto points_vector = motion_utils::convertToTrajectoryPointArray(trajectory_appended);
+  std::vector<double> curvature_v =
+    calcTrajectoryCurvatureFrom3Points(points_vector, m_params.curvature_calc_index);
+
+  // Set gains according to curvature and gear
+  double k = is_forward_shift
+               ? (fabs(curvature_v.at(closest_point.first)) > m_params.curvature_threshold
+                    ? m_params.k_turn
+                    : m_params.k_straight)
+               : m_params.reverse_k;
+  double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
+  double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
 
   // Get heading error
   double vehicle_yaw = tf2::getYaw(steering_pose.orientation);
-  double trajectory_yaw = tf2::getYaw(m_trajectory_ptr->at(closest_point.first).orientation);
+  double trajectory_yaw = tf2::getYaw(pose_vector.at(closest_point.first).orientation);
   double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Calculate cross track error
-  double cross_track_yaw =
-    utils::calcHeading(steering_pose, m_trajectory_ptr->at(closest_point.first));
+  double cross_track_yaw = utils::calcHeading(steering_pose, pose_vector.at(closest_point.first));
   double cross_track_yaw_diff = utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
   double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
-
-  // Set gains according to curvature and gear
-  double k =
-    is_forward_shift
-      ? (fabs(curvature) > m_params.curvature_threshold ? m_params.k_turn : m_params.k_straight)
-      : m_params.reverse_k;
-  double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
-  double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
 
   // Calculate cross track yaw error
   double cross_track_yaw_error =
@@ -153,7 +145,7 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "k_soft: %f", k_soft);
   RCLCPP_ERROR(logger, "k_d_yaw: %f", k_d_yaw);
   RCLCPP_ERROR(logger, "k_d_steer: %f", m_params.k_d_steer);
-  RCLCPP_ERROR(logger, "Path curvature: %f", curvature);
+  RCLCPP_ERROR(logger, "Path curvature: %f", curvature_v.at(closest_point.first));
   RCLCPP_ERROR(logger, "Enable path smoothing: %d", m_params.enable_path_smoothing);
   RCLCPP_ERROR(logger, "Path filter moving average: %ld", m_params.path_filter_moving_ave_num);
   RCLCPP_ERROR(logger, "Is Forward: %d", is_forward_shift);
