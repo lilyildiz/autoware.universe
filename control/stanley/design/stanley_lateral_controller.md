@@ -43,13 +43,12 @@ Where $e(t)$ is the distance between front axle (rear axle in reverse) and the t
 11. Negative feedback on yaw rate for active damping is calculate using the equation below $$k_{d,yaw} * (r_{meas} - r_{traj})$$ where $k_{d,yaw}$ is a tuned
 gain, $r_{traj}$ is the yaw rate for the trajectory, and $r_{meas}$ is the
 measured yaw rate. Please see the original paper for more details.
-12. Steer damping for time delay and overshoots in the controller commands is calculated using the equation below $$ k_{d,steer}* (δ_{meas}(i) − δ_{meas}(i + 1))$$ where where $δ_{meas}$ is the discrete time
+12. Steer damping for time delay and overshoots in the controller commands is calculated using the equation below $$k_{d,steer}* (\delta_{meas}(i) − \delta_{meas}(i + 1))$$ where where $\delta_{meas}$ is the discrete time
 measurement of the steering angle, and $i$ is the index of the
 measurement one control period earlier.  The value of $k_{d,steer}$ is tuned
 to be large enough to damp the steering wheel response, but
 small enough to have minimal effect on performance. Please see the original paper for more details.
-13. Calculate the final steering angle with the equation below $$ δ(t) = ψ(t) + \arctan{\frac{k*e(t)}{k_{soft}+v(t)}}
-+k_{d,yaw} * (r_{meas} - r_{traj})+ k_{d,steer}* (δ_{meas}(i) − δ_{meas}(i + 1)) $$
+13. Calculate the final steering angle with the equation below $$\delta(t)= \psi(t)+ \arctan{\frac{k*e(t)}{k_{soft} * v(t)}} + k_{d,yaw} * (r_{meas}-r_{traj}) + k_{d,steer} * (\delta_{meas}(i) - \delta_{meas}(i+1))$$ Please see the original paper for more details.
     * Negative of the steering angle is used in reverse gear.
 
 
