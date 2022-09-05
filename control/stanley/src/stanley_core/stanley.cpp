@@ -118,10 +118,10 @@ std::pair<bool, double> Stanley::run()
     atan(k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + k_soft));
 
   // Negative feedback on yaw rate
-  double measured_yaw_rate =
-    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, vehicle_yaw, m_params.wheelbase_m);
-  double trajectory_yaw_rate =
-    utils::calcYawRate(m_odom_ptr->twist.twist.linear.x, trajectory_yaw, m_params.wheelbase_m);
+  double measured_yaw_rate =m_odom_ptr->twist.twist.angular.z;
+  double trajectory_yaw_rate = utils::calcYawRate(
+    m_odom_ptr->twist.twist.linear.x,
+    std::atan(m_params.wheelbase_m * curvature_v.at(closest_point.first)), m_params.wheelbase_m);
   double yaw_feedback = k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
   // Steer damping
