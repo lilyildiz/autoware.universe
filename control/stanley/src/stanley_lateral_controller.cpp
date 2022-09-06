@@ -36,11 +36,13 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   m_params.reverse_k = m_node->declare_parameter<double>("reverse_k", 0.0);
   m_params.reverse_k_soft = m_node->declare_parameter<double>("reverse_k_soft", 0.0);
   m_params.reverse_k_d_yaw = m_node->declare_parameter<double>("reverse_k_d_yaw", 0.0);
+  m_params.recover_k = m_node->declare_parameter<double>("recover_k", 0.0);
   m_params.curvature_threshold = m_node->declare_parameter<double>("curvature_threshold", 0.0);
   m_params.curvature_calc_index = m_node->declare_parameter<int64_t>("curvature_calc_index", 0.0);
   m_params.convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);
   m_params.max_steer_rad = m_node->declare_parameter<double>("max_steer_angle", 1.0);
-  m_params.wheelbase_m = vehicle_info_util::VehicleInfoUtil(*m_node).getVehicleInfo().wheel_base_m;
+  m_params.wheelbase_m = vehicle_info_util::VehicleInfoUtil(node).getVehicleInfo().wheel_base_m;
+  m_params.wheel_tread_m = vehicle_info_util::VehicleInfoUtil(node).getVehicleInfo().wheel_tread_m;
   m_params.enable_path_smoothing = m_node->declare_parameter<bool>("enable_path_smoothing", false);
   m_params.path_filter_moving_ave_num =
     m_node->declare_parameter<int64_t>("path_filter_moving_ave_num", 5);

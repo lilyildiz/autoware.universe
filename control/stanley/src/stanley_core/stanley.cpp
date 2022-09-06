@@ -61,9 +61,8 @@ std::pair<bool, double> Stanley::run()
     tier4_autoware_utils::isDrivingForward(pose_vector.at(0), pose_vector.at(1));
 
   // Append virtual points to trajectory
-  std::vector<Pose> virtual_path;
   if (is_forward_shift) {
-    virtual_path = utils::createVirtualPath(pose_vector, m_params.wheelbase_m, 0.5);
+    const auto virtual_path = utils::createVirtualPath(pose_vector, m_params.wheelbase_m, 0.5);
     pose_vector.insert(pose_vector.end(), virtual_path.begin(), virtual_path.end());
   }
 
@@ -75,51 +74,55 @@ std::pair<bool, double> Stanley::run()
   }
 
   // Get front axle pose
-  Pose front_axle_pose =
+  const Pose front_axle_pose =
     tier4_autoware_utils::calcOffsetPose(*m_pose_ptr, m_params.wheelbase_m, 0.0, 0.0);
 
   // Pose for steering calculation
   Pose steering_pose = is_forward_shift ? front_axle_pose : *m_pose_ptr;
 
   // Get the closest point to front axle
-  std::pair<size_t, double> closest_point = utils::calcClosestPoint(pose_vector, steering_pose);
+  const std::pair<size_t, double> closest_point =
+    utils::calcClosestPoint(pose_vector, steering_pose);
 
   // Calculate trajectory curvature
   const double curvature =
     utils::getPointCurvature(pose_vector, m_params.curvature_calc_index, closest_point.first);
 
   // Set gains according to curvature and gear
-  double k =
+  const double k =
     is_forward_shift
-      ? (fabs(curvature) > m_params.curvature_threshold ? m_params.k_turn : m_params.k_straight)
+      ? (closest_point.second > m_params.wheel_tread_m / 1.8)
+          ? m_params.recover_k
+          : (fabs(curvature) > m_params.curvature_threshold ? m_params.k_turn : m_params.k_straight)
       : m_params.reverse_k;
-  double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
-  double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
+  const double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
+  const double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
 
   // Get heading error
-  double vehicle_yaw = tf2::getYaw(steering_pose.orientation);
-  double trajectory_yaw = tf2::getYaw(pose_vector.at(closest_point.first).orientation);
-  double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
+  const double vehicle_yaw = tf2::getYaw(steering_pose.orientation);
+  const double trajectory_yaw = tf2::getYaw(pose_vector.at(closest_point.first).orientation);
+  const double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Calculate cross track error
-  double cross_track_yaw = utils::calcHeading(steering_pose, pose_vector.at(closest_point.first));
-  double cross_track_yaw_diff = utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
-  double cross_track_error =
+  const double cross_track_yaw =
+    utils::calcHeading(steering_pose, pose_vector.at(closest_point.first));
+  const double cross_track_yaw_diff = utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
+  const double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
 
   // Calculate cross track yaw error
-  double cross_track_yaw_error =
+  const double cross_track_yaw_error =
     atan(k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + k_soft));
 
   // Negative feedback on yaw rate
-  double measured_yaw_rate = m_odom_ptr->twist.twist.angular.z;
-  double trajectory_yaw_rate = utils::calcYawRate(
+  const double measured_yaw_rate = m_odom_ptr->twist.twist.angular.z;
+  const double trajectory_yaw_rate = utils::calcYawRate(
     m_odom_ptr->twist.twist.linear.x, std::atan(m_params.wheelbase_m * curvature),
     m_params.wheelbase_m);
-  double yaw_feedback = k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
+  const double yaw_feedback = k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
   // Steer damping
-  double steer_damp = m_params.k_d_steer * (m_prev_steer - m_curr_steer);
+  const double steer_damp = m_params.k_d_steer * (m_prev_steer - m_curr_steer);
 
   // Calculate the steering angle
   double steering_angle = utils::normalizeEulerAngle(

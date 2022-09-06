@@ -57,7 +57,9 @@ struct Params
   double reverse_k;        //!< @brief stanley cross track gain for reverse gear
   double reverse_k_soft;   //!< @brief stanley gain for low speed in reverse gear
   double reverse_k_d_yaw;  //!< @brief stanley gain for negative yaw rate feedback for reverse gear
+  double recover_k;        //!< @brief stanley cross track gain for recovery
   double wheelbase_m;      //!< @brief vehicle wheelbase[m]
+  double wheel_tread_m;    //!< @brief distance between left wheel center and right wheel center[m]
   double curvature_threshold;          //!< @brief curvature threshold for turns
   int64_t curvature_calc_index;        //!< @brief index distance used in curvature calculation
   double convergence_threshold;        //!< @brief convergence threshold for stanley controller[m]
