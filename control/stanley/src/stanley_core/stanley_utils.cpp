@@ -118,16 +118,29 @@ double limitSteerAngle(double steer_angle, double max_angle)
   return steer_angle;
 }
 
-size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold)
+double getPointCurvature(std::vector<Pose> & path, size_t idx_dist, size_t starting_index)
 {
-  size_t next_index = starting_index + 1;
-  while (next_index < path.size() - 2) {
-    if (euclideanDistance(path.at(starting_index), path.at(next_index)) > threshold) {
-      break;
-    }
-    next_index++;
+  if (path.size() < 3) {
+    return 0.0;
   }
-  return next_index;
+
+  // if the idx size is not enough, change the idx_dist
+  const auto max_idx_dist = static_cast<size_t>(std::floor((path.size() - 1) / 2.0));
+  idx_dist = std::max(1ul, std::min(idx_dist, max_idx_dist));
+
+  if (idx_dist < 1) {
+    throw std::logic_error("idx_dist less than 1 is not expected");
+  }
+
+  // calculate curvature by circle fitting from three points
+  try {
+    const auto p0 = getPoint(path.at(starting_index - idx_dist));
+    const auto p1 = getPoint(path.at(starting_index));
+    const auto p2 = getPoint(path.at(starting_index + idx_dist));
+    return calcCurvature(p0, p1, p2);
+  } catch (...) {
+    return 0.0;  // points are too close. No curvature.
+  }
 }
 
 std::vector<Pose> smoothPath(

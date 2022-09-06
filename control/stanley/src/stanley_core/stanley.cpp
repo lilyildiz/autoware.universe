@@ -16,8 +16,6 @@
 
 #include "stanley/stanley.hpp"
 
-#include <math.h>
-
 namespace autoware
 {
 namespace stanley
@@ -87,18 +85,14 @@ std::pair<bool, double> Stanley::run()
   std::pair<size_t, double> closest_point = utils::calcClosestPoint(pose_vector, steering_pose);
 
   // Calculate trajectory curvature
-  auto trajectory_appended = utils::appendToTrajectory(virtual_path, *m_trajectory_ptr);
-  trajectory_appended = utils::updateTrajectoryFromPoses(pose_vector, trajectory_appended);
-  const auto points_vector = motion_utils::convertToTrajectoryPointArray(trajectory_appended);
-  std::vector<double> curvature_v =
-    calcTrajectoryCurvatureFrom3Points(points_vector, m_params.curvature_calc_index);
+  const double curvature =
+    utils::getPointCurvature(pose_vector, m_params.curvature_calc_index, closest_point.first);
 
   // Set gains according to curvature and gear
-  double k = is_forward_shift
-               ? (fabs(curvature_v.at(closest_point.first)) > m_params.curvature_threshold
-                    ? m_params.k_turn
-                    : m_params.k_straight)
-               : m_params.reverse_k;
+  double k =
+    is_forward_shift
+      ? (fabs(curvature) > m_params.curvature_threshold ? m_params.k_turn : m_params.k_straight)
+      : m_params.reverse_k;
   double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
   double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
 
@@ -118,10 +112,10 @@ std::pair<bool, double> Stanley::run()
     atan(k * cross_track_error / (m_odom_ptr->twist.twist.linear.x + k_soft));
 
   // Negative feedback on yaw rate
-  double measured_yaw_rate =m_odom_ptr->twist.twist.angular.z;
+  double measured_yaw_rate = m_odom_ptr->twist.twist.angular.z;
   double trajectory_yaw_rate = utils::calcYawRate(
-    m_odom_ptr->twist.twist.linear.x,
-    std::atan(m_params.wheelbase_m * curvature_v.at(closest_point.first)), m_params.wheelbase_m);
+    m_odom_ptr->twist.twist.linear.x, std::atan(m_params.wheelbase_m * curvature),
+    m_params.wheelbase_m);
   double yaw_feedback = k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
 
   // Steer damping
@@ -145,7 +139,7 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "k_soft: %f", k_soft);
   RCLCPP_ERROR(logger, "k_d_yaw: %f", k_d_yaw);
   RCLCPP_ERROR(logger, "k_d_steer: %f", m_params.k_d_steer);
-  RCLCPP_ERROR(logger, "Path curvature: %f", curvature_v.at(closest_point.first));
+  RCLCPP_ERROR(logger, "Path curvature: %f", curvature);
   RCLCPP_ERROR(logger, "Enable path smoothing: %d", m_params.enable_path_smoothing);
   RCLCPP_ERROR(logger, "Path filter moving average: %ld", m_params.path_filter_moving_ave_num);
   RCLCPP_ERROR(logger, "Is Forward: %d", is_forward_shift);

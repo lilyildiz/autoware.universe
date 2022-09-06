@@ -21,11 +21,12 @@
 #ifndef STANLEY__STANLEY_HPP_
 #define STANLEY__STANLEY_HPP_
 
+#include "motion_utils/trajectory/tmp_conversion.hpp"
+#include "motion_velocity_smoother/trajectory_utils.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 #include <stanley/stanley_utils.hpp>
 #include <tier4_autoware_utils/tier4_autoware_utils.hpp>
-#include "motion_velocity_smoother/trajectory_utils.hpp"
-#include "motion_utils/trajectory/tmp_conversion.hpp"
 
 #include <geometry_msgs/msg/pose.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -36,12 +37,10 @@
 #include <utility>
 #include <vector>
 
-using geometry_msgs::msg::Pose;
-using nav_msgs::msg::Odometry;
-using tier4_autoware_utils::calcCurvature;
-using tier4_autoware_utils::getPoint;
 using autoware_auto_planning_msgs::msg::Trajectory;
+using geometry_msgs::msg::Pose;
 using motion_velocity_smoother::trajectory_utils::calcTrajectoryCurvatureFrom3Points;
+using nav_msgs::msg::Odometry;
 
 namespace autoware
 {
@@ -50,36 +49,21 @@ namespace stanley
 
 struct Params
 {
-  //!< @brief stanley cross track gain for straights
-  double k_straight;
-  //!< @brief stanley cross track gain for turns
-  double k_turn;
-  //!< @brief stanley gain for low speed
-  double k_soft;
-  //!< @brief stanley gain for negative yaw rate feedback
-  double k_d_yaw;
-  //!< @brief stanley gain for steer damping
-  double k_d_steer;
-  //!< @brief stanley cross track gain for reverse gear
-  double reverse_k;
-  //!< @brief stanley gain for low speed in reverse gear
-  double reverse_k_soft;
-  //!< @brief stanley gain for negative yaw rate feedback for reverse gear
-  double reverse_k_d_yaw;
-  //!< @brief vehicle wheelbase[m]
-  double wheelbase_m;
-  //!< @brief curvature threshold for turns
-  double curvature_threshold;
-  //!< @brief index distance used in curvature calculation
-  int64_t curvature_calc_index;
-  //!< @brief convergence threshold for stanley controller[m]
-  double convergence_threshold;
-  //!< @brief maximum steering angle[rad]
-  double max_steer_rad;
-  //!< @brief path smoothing flag
-  bool enable_path_smoothing;
-  //!< @brief index distance of the moving average filter
-  int64_t path_filter_moving_ave_num;
+  double k_straight;       //!< @brief stanley cross track gain for straights
+  double k_turn;           //!< @brief stanley cross track gain for turns
+  double k_soft;           //!< @brief stanley gain for low speed
+  double k_d_yaw;          //!< @brief stanley gain for negative yaw rate feedback
+  double k_d_steer;        //!< @brief stanley gain for steer damping
+  double reverse_k;        //!< @brief stanley cross track gain for reverse gear
+  double reverse_k_soft;   //!< @brief stanley gain for low speed in reverse gear
+  double reverse_k_d_yaw;  //!< @brief stanley gain for negative yaw rate feedback for reverse gear
+  double wheelbase_m;      //!< @brief vehicle wheelbase[m]
+  double curvature_threshold;          //!< @brief curvature threshold for turns
+  int64_t curvature_calc_index;        //!< @brief index distance used in curvature calculation
+  double convergence_threshold;        //!< @brief convergence threshold for stanley controller[m]
+  double max_steer_rad;                //!< @brief maximum steering angle[rad]
+  bool enable_path_smoothing;          //!< @brief path smoothing flag
+  int64_t path_filter_moving_ave_num;  //!< @brief index distance of the moving average filter
 };
 
 /**

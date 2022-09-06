@@ -33,10 +33,14 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
+#include <math.h>
+
 using autoware::motion::control::trajectory_follower::MoveAverageFilter::filt_vector;
 using autoware_auto_planning_msgs::msg::Trajectory;
-using geometry_msgs::msg::Pose;
 using autoware_auto_planning_msgs::msg::TrajectoryPoint;
+using geometry_msgs::msg::Pose;
+using tier4_autoware_utils::calcCurvature;
+using tier4_autoware_utils::getPoint;
 
 namespace autoware
 {
@@ -122,13 +126,13 @@ std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, 
 double limitSteerAngle(double steer_angle, double max_angle);
 
 /**
- * @brief get a point [threshold] meters ahead of the [starting_index] point on the [trajectory]
+ * @brief get a points curvature on a path
  * @param path the path to be evaluated
- * @param starting_index the index of the starting point
- * @param threshold the threshold distance
- * @return index of the calculated point
+ * @param idx_dist index distance for curvature calculation
+ * @param starting_index the point to be evaluated
+ * @return curvature
  */
-size_t getNextIdxWithThr(std::vector<Pose> & path, size_t & starting_index, double threshold);
+double getPointCurvature(std::vector<Pose> & path, size_t idx_dist, size_t starting_index);
 
 /**
  * @brief path smoothing
