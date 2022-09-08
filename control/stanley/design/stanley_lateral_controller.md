@@ -31,11 +31,8 @@ The process of stanley controller is described below.
 4. Get front axle Pose by offsetting the rear axle Pose by the lenght of the *wheelbase*.
 5. Set the Pose for the calculations according to the driving direction.
 6. Get the the nearest point of trajectory to be tracked.
-7. Calculate the curvature. The points used in curvature calculations are:
-    * The point to be tracked.
-    * `curvature_calc_dist` meters ahead of the first point.
-    * `curvature_calc_dist` meters ahead of the second point.
-8. Set stanley gains according to the curvature and direction.
+7. Calculate the curvature.
+8. Set stanley gains according to the curvature, gear and cross track error.
 9. Calculate heading error. Heading error, $\psi(t)$, is the yaw angle (heading) of
 the vehicle with respect to the closest trajectory segment. Please see the original paper for more details.
 10. Calculate crosstrack yaw error. Crosstrack yaw error is obtained by the equation below $$\arctan{\frac{k*e(t)}{k_{soft}+v(t)}} $$
@@ -64,19 +61,19 @@ small enough to have minimal effect on performance. Please see the original pape
 These parameters are defined in `param/lateral_controller_defaults.yaml` and `vehicle_info.param.yaml`.
 
 | Name                       | Type   | Description                                                    | Default value |
-| :------------------------- | :----- | :------------------------------------------------------------- | :------------ |
-| k_straight                 | double | stanley cross track gain for straights                         |               |
-| k_turn                     | double | stanley cross track gain for turns                             |               |
-| k_soft                     | double | stanley gain for low speed                                     |               |
-| k_d_yaw                    | double | stanley gain for negative yaw rate feedback                    |               |
-| k_d_steer                  | double | stanley gain for steer damping                                 |               |
-| reverse_k                  | double | stanley cross track gain for reverse gear                      |               |
-| reverse_k_soft             | double | stanley gain for low speed in reverse gear                     |               |
-| reverse_k_d_yaw            | double | stanley gain for negative yaw rate feedback for reverse gear   |               |
-| curvature_threshold        | double | curvature threshold for turns                                  |               |
-| curvature_calc_dist        | double | point-to-point distance used in curvature calculation          |               |
-| convergence_threshold      | double | convergence threshold for stanley controller[m]                |               |
-| max_steer_angle            | double | maximum steering angle[rad]                                    |               |
+|:---------------------------|:-------|:---------------------------------------------------------------|:--------------|
+| k_straight                 | double | stanley cross track gain for straights                         | 0.15          |
+| k_turn                     | double | stanley cross track gain for turns                             | 0.22          |
+| k_soft                     | double | stanley gain for low speed                                     | 1.00          |
+| k_d_yaw                    | double | stanley gain for negative yaw rate feedback                    | -0.07         |
+| k_d_steer                  | double | stanley gain for steer damping                                 | 0.15          |
+| reverse_k                  | double | stanley cross track gain for reverse gear                      | 3.55          |
+| reverse_k_soft             | double | stanley gain for low speed in reverse gear                     | -1.65         |
+| reverse_k_d_yaw            | double | stanley gain for negative yaw rate feedback for reverse gear   | 0.90          |
+| recover_k                  | double | stanley cross-track gain for recovery                          | 0.70          |
+| curvature_threshold        | double | curvature threshold for turns                                  | 0.01          |
+| curvature_calc_index       | int    | index distance used in curvature calculation                   | 5             |
+| convergence_threshold      | double | convergence threshold for stanley controller[m]                | 0.10          |
 | enable_path_smoothing      | bool   | path smoothing flag.                                           | true          |
 | path_filter_moving_ave_num | int    | number of data points moving average filter for path smoothing | 35            |
 

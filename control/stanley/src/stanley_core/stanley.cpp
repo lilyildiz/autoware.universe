@@ -88,7 +88,7 @@ std::pair<bool, double> Stanley::run()
   const double curvature =
     utils::getPointCurvature(pose_vector, m_params.curvature_calc_index, closest_point.first);
 
-  // Set gains according to curvature and gear
+  // Set gains according to curvature, gear and cross track error
   const double k =
     is_forward_shift
       ? (closest_point.second > m_params.wheel_tread_m / 1.8)
