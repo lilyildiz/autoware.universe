@@ -144,21 +144,6 @@ double getPointCurvature(std::vector<Pose> & path, size_t idx_dist, size_t start
 std::vector<Pose> smoothPath(
   std::vector<Pose> & path, int64_t path_filter_moving_ave_num, bool is_forward);
 
-/**
- * @brief append Poses to Trajectory
- * @param poses
- * @param trajectory
- * @return Appended Trajectory
- */
-Trajectory appendToTrajectory(std::vector<Pose> & poses, Trajectory & trajectory);
-
-/**
- * @brief convert Pose vector to Trajectory
- * @param poses Pose vector
- * @param trajectory reference trajectory
- * @return output trajectory
- */
-Trajectory updateTrajectoryFromPoses(std::vector<Pose> & poses, Trajectory & trajectory);
 
 }  // namespace utils
 }  // namespace stanley
