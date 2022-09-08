@@ -48,7 +48,7 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
     m_node->declare_parameter<int64_t>("path_filter_moving_ave_num", 5);
 
   // Wait for pose
-  utils::waitForTransform(m_tf_buffer, "map", "base_link", logger);
+  stanley_utils::waitForTransform(m_tf_buffer, "map", "base_link", logger);
 }
 
 StanleyLateralController::~StanleyLateralController() = default;
@@ -95,7 +95,8 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   AckermannLateralCommand control_command;
   control_command.stamp = m_node->get_clock()->now();
   control_command.steering_tire_angle =
-    static_cast<float>(utils::limitSteerAngle(stanley_result.second, m_params.max_steer_rad));
+    static_cast<float>(
+    stanley_utils::limitSteerAngle(stanley_result.second, m_params.max_steer_rad));
 
   // Generate output
   LateralOutput output;

@@ -46,7 +46,7 @@ namespace autoware
 {
 namespace stanley
 {
-namespace utils
+namespace stanley_utils
 {
 /**
  * @brief normalize the angle to [-pi, pi]

@@ -20,7 +20,7 @@ namespace autoware
 {
 namespace stanley
 {
-namespace utils
+namespace stanley_utils
 {
 double normalizeEulerAngle(const double euler)
 {

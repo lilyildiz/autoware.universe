@@ -54,7 +54,7 @@ std::pair<bool, double> Stanley::run()
   }
 
   // Extract poses from trajectory
-  std::vector<Pose> pose_vector = utils::extractPoses(*m_trajectory_ptr);
+  std::vector<Pose> pose_vector = stanley_utils::extractPoses(*m_trajectory_ptr);
 
   // Get driving direction
   const auto is_forward_shift =
@@ -62,14 +62,15 @@ std::pair<bool, double> Stanley::run()
 
   // Append virtual points to trajectory
   if (is_forward_shift) {
-    const auto virtual_path = utils::createVirtualPath(pose_vector, m_params.wheelbase_m, 0.5);
+    const auto virtual_path =
+      stanley_utils::createVirtualPath(pose_vector, m_params.wheelbase_m, 0.5);
     pose_vector.insert(pose_vector.end(), virtual_path.begin(), virtual_path.end());
   }
 
   // Path smoothing
   if (m_params.enable_path_smoothing) {
     const auto smoothed_path =
-      utils::smoothPath(pose_vector, m_params.path_filter_moving_ave_num, is_forward_shift);
+      stanley_utils::smoothPath(pose_vector, m_params.path_filter_moving_ave_num, is_forward_shift);
     pose_vector.assign(smoothed_path.begin(), smoothed_path.end());
   }
 
@@ -82,11 +83,10 @@ std::pair<bool, double> Stanley::run()
 
   // Get the closest point to front axle
   const std::pair<size_t, double> closest_point =
-    utils::calcClosestPoint(pose_vector, steering_pose);
+    stanley_utils::calcClosestPoint(pose_vector, steering_pose);
 
   // Calculate trajectory curvature
-  const double curvature =
-    utils::getPointCurvature(pose_vector, m_params.curvature_calc_index, closest_point.first);
+  const double curvature = stanley_utils::getPointCurvature(pose_vector, m_params.curvature_calc_index, closest_point.first);
 
   // Set gains according to curvature, gear and cross track error
   const double k =
@@ -101,12 +101,14 @@ std::pair<bool, double> Stanley::run()
   // Get heading error
   const double vehicle_yaw = tf2::getYaw(steering_pose.orientation);
   const double trajectory_yaw = tf2::getYaw(pose_vector.at(closest_point.first).orientation);
-  const double trajectory_yaw_error = utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
+  const double trajectory_yaw_error =
+    stanley_utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
   // Calculate cross track error
   const double cross_track_yaw =
-    utils::calcHeading(steering_pose, pose_vector.at(closest_point.first));
-  const double cross_track_yaw_diff = utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
+    stanley_utils::calcHeading(steering_pose, pose_vector.at(closest_point.first));
+  const double cross_track_yaw_diff =
+    stanley_utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
   const double cross_track_error =
     (cross_track_yaw_diff > 0) ? abs(closest_point.second) : -abs(closest_point.second);
 
@@ -116,7 +118,7 @@ std::pair<bool, double> Stanley::run()
 
   // Negative feedback on yaw rate
   const double measured_yaw_rate = m_odom_ptr->twist.twist.angular.z;
-  const double trajectory_yaw_rate = utils::calcYawRate(
+  const double trajectory_yaw_rate = stanley_utils::calcYawRate(
     m_odom_ptr->twist.twist.linear.x, std::atan(m_params.wheelbase_m * curvature),
     m_params.wheelbase_m);
   const double yaw_feedback = k_d_yaw * (measured_yaw_rate - trajectory_yaw_rate);
@@ -125,7 +127,7 @@ std::pair<bool, double> Stanley::run()
   const double steer_damp = m_params.k_d_steer * (m_prev_steer - m_curr_steer);
 
   // Calculate the steering angle
-  double steering_angle = utils::normalizeEulerAngle(
+  double steering_angle = stanley_utils::normalizeEulerAngle(
     cross_track_yaw_error + trajectory_yaw_error + yaw_feedback + steer_damp);
 
   // Reverse steering angle if driving in reverse gear
