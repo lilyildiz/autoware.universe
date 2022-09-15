@@ -100,23 +100,25 @@ std::pair<bool, double> Stanley::run()
     stanley_utils::calcClosestPoint(pose_vector, steering_pose);
 
   // Calculate trajectory curvature
-  const double curvature = stanley_utils::getPointCurvature(pose_vector, m_params.curvature_calc_index, closest_point.first);
-
-  // Set gains according to curvature, gear and cross track error
-  const double k =
-    is_forward_shift
-      ? (closest_point.second > m_params.wheel_tread_m / 1.8)
-          ? m_params.recover_k
-          : (fabs(curvature) > m_params.curvature_threshold ? m_params.k_turn : m_params.k_straight)
-      : m_params.reverse_k;
-  const double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
-  const double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
+  const double curvature = stanley_utils::getPointCurvature(
+    pose_vector, m_params.curvature_calc_index, closest_point.first);
 
   // Get heading error
   const double vehicle_yaw = tf2::getYaw(steering_pose.orientation);
   const double trajectory_yaw = tf2::getYaw(pose_vector.at(closest_point.first).orientation);
   const double trajectory_yaw_error =
     stanley_utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
+
+  // Set gains according to curvature, gear and cross track error
+  const double k =
+    is_forward_shift
+      ? (closest_point.second > m_params.wheel_tread_m / 2.00 ||
+         (trajectory_yaw_error < 0.1 && closest_point.second > 0.35))
+          ? m_params.recover_k
+          : (fabs(curvature) > m_params.curvature_threshold ? m_params.k_turn : m_params.k_straight)
+      : m_params.reverse_k;
+  const double k_soft = is_forward_shift ? m_params.k_soft : m_params.reverse_k_soft;
+  const double k_d_yaw = is_forward_shift ? m_params.k_d_yaw : m_params.reverse_k_d_yaw;
 
   // Calculate cross track error
   const double cross_track_yaw =
@@ -164,6 +166,7 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "Is Forward: %d", is_forward_shift);
   RCLCPP_ERROR(logger, "Vehicle yaw: %f", vehicle_yaw);
   RCLCPP_ERROR(logger, "Trajectory yaw: %f", trajectory_yaw);
+  RCLCPP_ERROR(logger, "CrossTrack: %f", closest_point.second);
 
   return std::make_pair(true, steering_angle);
 }

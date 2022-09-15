@@ -40,7 +40,8 @@ StanleyLateralController::StanleyLateralController(rclcpp::Node & node)
   m_params.curvature_threshold = m_node->declare_parameter<double>("curvature_threshold", 0.0);
   m_params.curvature_calc_index = m_node->declare_parameter<int64_t>("curvature_calc_index", 0.0);
   m_params.convergence_threshold = m_node->declare_parameter<double>("convergence_threshold", 0.1);
-  m_params.max_steer_rad = vehicle_info_util::VehicleInfoUtil(node).getVehicleInfo().max_steer_angle_rad;
+  m_params.max_steer_rad =
+    vehicle_info_util::VehicleInfoUtil(node).getVehicleInfo().max_steer_angle_rad;
   m_params.wheelbase_m = vehicle_info_util::VehicleInfoUtil(node).getVehicleInfo().wheel_base_m;
   m_params.wheel_tread_m = vehicle_info_util::VehicleInfoUtil(node).getVehicleInfo().wheel_tread_m;
   m_params.enable_path_smoothing = m_node->declare_parameter<bool>("enable_path_smoothing", false);
@@ -112,8 +113,7 @@ boost::optional<LateralOutput> StanleyLateralController::run()
   // Generate control_command
   AckermannLateralCommand control_command;
   control_command.stamp = m_node->get_clock()->now();
-  control_command.steering_tire_angle =
-    static_cast<float>(
+  control_command.steering_tire_angle = static_cast<float>(
     stanley_utils::limitSteerAngle(stanley_result.second, m_params.max_steer_rad));
 
   // Generate output

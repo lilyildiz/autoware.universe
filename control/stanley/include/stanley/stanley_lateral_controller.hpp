@@ -110,7 +110,7 @@ private:
 
   /* Parameters */
   //!< @brief stanley parameters
-  Params m_params;
+  Params m_params{};
 
 };
 }  // namespace stanley

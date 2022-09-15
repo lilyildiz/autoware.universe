@@ -99,7 +99,7 @@ std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, 
   std::vector<Pose> virtual_path;
   virtual_path.push_back(path.back());
   virtual_path.push_back(
-    tier4_autoware_utils::calcOffsetPose(path.back(), wheelbase + 1.0, 0.0, 0.0));
+    tier4_autoware_utils::calcOffsetPose(path.back(), wheelbase + 2.0, 0.0, 0.0));
   std::vector<double> resample_archlenghts;
   for (double i = 0; i < wheelbase; i += interval) {
     resample_archlenghts.push_back(i);
