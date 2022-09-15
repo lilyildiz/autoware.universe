@@ -30,12 +30,9 @@ std::vector<lanelet::ConstLanelet> getCrosswalksOnPath(
 {
   std::vector<lanelet::ConstLanelet> crosswalks;
 
-  auto nearest_segment_idx = motion_utils::findNearestSegmentIndex(
-    path.points, current_pose, std::numeric_limits<double>::max(), M_PI_2);
-
   // Add current lane id
-  const auto nearest_lane_id = behavior_velocity_planner::planning_utils::getNearestLaneId(
-    path, lanelet_map, current_pose, nearest_segment_idx);
+  const auto nearest_lane_id =
+    behavior_velocity_planner::planning_utils::getNearestLaneId(path, lanelet_map, current_pose);
 
   std::vector<int64_t> unique_lane_ids;
   if (nearest_lane_id) {
@@ -137,8 +134,10 @@ void CrosswalkModuleManager::launchNewModules(const PathWithLaneId & path)
       registerModule(std::make_shared<CrosswalkModule>(
         module_id, crosswalk, crosswalk_planner_param_, logger_.get_child("crosswalk_module"),
         clock_));
+      generateUUID(module_id);
+      updateRTCStatus(
+        getUUID(module_id), true, std::numeric_limits<double>::lowest(), path.header.stamp);
     }
-    generateUUID(module_id);
   }
 }
 
