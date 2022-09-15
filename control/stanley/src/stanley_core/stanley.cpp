@@ -41,8 +41,22 @@ void Stanley::setOdom(const Odometry & odom)
 
 bool Stanley::isReady() const
 {
-  return m_trajectory_ptr != nullptr && m_pose_ptr != nullptr && m_odom_ptr != nullptr &&
-         m_params.wheelbase_m != 0.0;
+  if (!m_odom_ptr) {
+    RCLCPP_WARN(logger, "waiting for current_odometry...");
+    return false;
+  }
+
+  if (!m_trajectory_ptr) {
+    RCLCPP_WARN(logger, "waiting for trajectory...");
+    return false;
+  }
+
+  if (!m_pose_ptr) {
+    RCLCPP_WARN(logger, "waiting for current_pose...");
+    return false;
+  }
+
+  return true;
 }
 
 std::pair<bool, double> Stanley::run()

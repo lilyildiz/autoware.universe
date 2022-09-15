@@ -62,7 +62,25 @@ void StanleyLateralController::setInputData(const InputData & input_data)
 
 bool StanleyLateralController::isReady()
 {
-  return m_trajectory != nullptr && m_odom != nullptr && m_steering_report != nullptr;
+  if (!m_odom) {
+    RCLCPP_WARN_THROTTLE(
+      m_node->get_logger(), *m_node->get_clock(), 5000, "waiting for current_odometry...");
+    return false;
+  }
+
+  if (!m_trajectory) {
+    RCLCPP_WARN_THROTTLE(
+      m_node->get_logger(), *m_node->get_clock(), 5000, "waiting for trajectory...");
+    return false;
+  }
+
+  if (!m_pose) {
+    RCLCPP_WARN_THROTTLE(
+      m_node->get_logger(), *m_node->get_clock(), 5000, "waiting for current_pose...");
+    return false;
+  }
+
+  return true;
 }
 
 boost::optional<LateralOutput> StanleyLateralController::run()
