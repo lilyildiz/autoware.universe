@@ -93,13 +93,6 @@ geometry_msgs::msg::TransformStamped waitForTransform(
   rclcpp::Logger & logger);
 
 /**
- * @brief get Pose vector from a Trajectory
- * @param trajectory
- * @return Pose vector
- */
-std::vector<Pose> extractPoses(const Trajectory & trajectory);
-
-/**
  * @brief calculate yaw rate
  * @param velocity velocity
  * @param yaw yaw
@@ -107,15 +100,6 @@ std::vector<Pose> extractPoses(const Trajectory & trajectory);
  * @return yaw rate
  */
 double calcYawRate(double velocity, double yaw, double wheelbase);
-
-/**
- * @brief create a virtual path with the length of the wheelbase at the end of the trajectory
- * @param path the path to be extended
- * @param wheelbase the wheelbase of the vehicle
- * @param interval waypoint interval
- * @return virtual path
- */
-std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, double interval);
 
 /**
  * @brief limit steering angle
@@ -144,8 +128,7 @@ double getPointCurvature(std::vector<Pose> & path, size_t idx_dist, size_t start
 std::vector<Pose> smoothPath(
   std::vector<Pose> & path, int64_t path_filter_moving_ave_num, bool is_forward);
 
-
-}  // namespace utils
+}  // namespace stanley_utils
 }  // namespace stanley
 }  // namespace autoware
 #endif  // STANLEY__STANLEY_UTILS_HPP_

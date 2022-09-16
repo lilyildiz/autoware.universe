@@ -78,33 +78,9 @@ geometry_msgs::msg::TransformStamped waitForTransform(
   return geometry_msgs::msg::TransformStamped();
 }
 
-std::vector<Pose> extractPoses(const Trajectory & trajectory)
-{
-  std::vector<Pose> poses;
-
-  for (const auto & p : trajectory.points) {
-    poses.push_back(p.pose);
-  }
-
-  return poses;
-}
-
 double calcYawRate(double velocity, double yaw, double wheelbase)
 {
   return -(velocity * std::sin(yaw)) / wheelbase;
-}
-
-std::vector<Pose> createVirtualPath(std::vector<Pose> & path, double wheelbase, double interval)
-{
-  std::vector<Pose> virtual_path;
-  virtual_path.push_back(path.back());
-  virtual_path.push_back(
-    tier4_autoware_utils::calcOffsetPose(path.back(), wheelbase + 2.0, 0.0, 0.0));
-  std::vector<double> resample_archlenghts;
-  for (double i = 0; i < wheelbase; i += interval) {
-    resample_archlenghts.push_back(i);
-  }
-  return motion_utils::resamplePath(virtual_path, resample_archlenghts, true, false);
 }
 
 double limitSteerAngle(double steer_angle, double max_angle)
@@ -186,6 +162,6 @@ std::vector<Pose> smoothPath(
   return smoothed_path;
 }
 
-}  // namespace utils
+}  // namespace stanley_utils
 }  // namespace stanley
 }  // namespace autoware

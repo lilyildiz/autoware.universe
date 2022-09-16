@@ -129,6 +129,19 @@ public:
    */
   std::pair<bool, double> run();
 
+  /**
+   * @brief get Pose vector from a Trajectory
+   * @return Pose vector
+   */
+  void extractPoses();
+
+  /**
+   * @brief create a virtual path with the length of the wheelbase at the end of the trajectory
+   * @param interval waypoint interval
+   * @return virtual path
+   */
+  void createVirtualPath(double interval);
+
 private:
   /* Parameters */
   //!< @brief stanley algorithm parameters
@@ -147,6 +160,9 @@ private:
   std::shared_ptr<Pose> m_pose_ptr;
   //!< @brief current odometry
   std::shared_ptr<Odometry> m_odom_ptr;
+
+  //!< @brief pose vector
+  std::vector<Pose> m_poses;
 
   //!< @brief ROS logger used for debug logging
   rclcpp::Logger logger = rclcpp::get_logger("stanley");

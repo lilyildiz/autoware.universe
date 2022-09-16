@@ -29,6 +29,8 @@ Stanley::Stanley()
 
   m_curr_steer = 0.0;
   m_prev_steer = 0.0;
+
+  m_poses = std::vector<Pose>();
 }
 
 bool Stanley::isReady() const
@@ -51,6 +53,27 @@ bool Stanley::isReady() const
   return true;
 }
 
+void Stanley::extractPoses()
+{
+  for (const auto & p : m_trajectory_ptr->points) {
+    m_poses.push_back(p.pose);
+  }
+}
+
+void Stanley::createVirtualPath(double interval)
+{
+  std::vector<Pose> virtual_path;
+  virtual_path.push_back(m_poses.back());
+  virtual_path.push_back(
+    tier4_autoware_utils::calcOffsetPose(m_poses.back(), m_params.wheelbase_m + 1.0, 0.0, 0.0));
+  std::vector<double> resample_archlenghts;
+  for (double i = 0; i < m_params.wheelbase_m + 1.0; i += interval) {
+    resample_archlenghts.push_back(i);
+  }
+  virtual_path = motion_utils::resamplePath(virtual_path, resample_archlenghts, true, false);
+  m_poses.insert(m_poses.end(), virtual_path.begin(), virtual_path.end());
+}
+
 std::pair<bool, double> Stanley::run()
 {
   // Check if we have enough data to run the algorithm
@@ -60,24 +83,26 @@ std::pair<bool, double> Stanley::run()
   }
 
   // Extract poses from trajectory
-  std::vector<Pose> pose_vector = stanley_utils::extractPoses(*m_trajectory_ptr);
+  extractPoses();
+  if (m_poses.empty()) {
+    RCLCPP_ERROR(logger, "[Stanley]No poses in trajectory not expected");
+    return std::make_pair(false, std::numeric_limits<double>::quiet_NaN());
+  }
 
   // Get driving direction
   const auto is_forward_shift =
-    tier4_autoware_utils::isDrivingForward(pose_vector.at(0), pose_vector.at(1));
+    tier4_autoware_utils::isDrivingForward(m_poses.at(0), m_poses.at(1));
 
   // Append virtual points to trajectory
   if (is_forward_shift) {
-    const auto virtual_path =
-      stanley_utils::createVirtualPath(pose_vector, m_params.wheelbase_m, 0.5);
-    pose_vector.insert(pose_vector.end(), virtual_path.begin(), virtual_path.end());
+    createVirtualPath(0.1);
   }
 
   // Path smoothing
   if (m_params.enable_path_smoothing) {
     const auto smoothed_path =
-      stanley_utils::smoothPath(pose_vector, m_params.path_filter_moving_ave_num, is_forward_shift);
-    pose_vector.assign(smoothed_path.begin(), smoothed_path.end());
+      stanley_utils::smoothPath(m_poses, m_params.path_filter_moving_ave_num, is_forward_shift);
+    m_poses.assign(smoothed_path.begin(), smoothed_path.end());
   }
 
   // Get front axle pose
@@ -89,15 +114,15 @@ std::pair<bool, double> Stanley::run()
 
   // Get the closest point to front axle
   const std::pair<size_t, double> closest_point =
-    stanley_utils::calcClosestPoint(pose_vector, steering_pose);
+    stanley_utils::calcClosestPoint(m_poses, steering_pose);
 
   // Calculate trajectory curvature
-  const double curvature = stanley_utils::getPointCurvature(
-    pose_vector, m_params.curvature_calc_index, closest_point.first);
+  const double curvature =
+    stanley_utils::getPointCurvature(m_poses, m_params.curvature_calc_index, closest_point.first);
 
   // Get heading error
   const double vehicle_yaw = tf2::getYaw(steering_pose.orientation);
-  const double trajectory_yaw = tf2::getYaw(pose_vector.at(closest_point.first).orientation);
+  const double trajectory_yaw = tf2::getYaw(m_poses.at(closest_point.first).orientation);
   const double trajectory_yaw_error =
     stanley_utils::normalizeEulerAngle(trajectory_yaw - vehicle_yaw);
 
@@ -114,7 +139,7 @@ std::pair<bool, double> Stanley::run()
 
   // Calculate cross track error
   const double cross_track_yaw =
-    stanley_utils::calcHeading(steering_pose, pose_vector.at(closest_point.first));
+    stanley_utils::calcHeading(steering_pose, m_poses.at(closest_point.first));
   const double cross_track_yaw_diff =
     stanley_utils::normalizeEulerAngle(trajectory_yaw - cross_track_yaw);
   const double cross_track_error =
@@ -159,6 +184,9 @@ std::pair<bool, double> Stanley::run()
   RCLCPP_ERROR(logger, "Vehicle yaw: %f", vehicle_yaw);
   RCLCPP_ERROR(logger, "Trajectory yaw: %f", trajectory_yaw);
   RCLCPP_ERROR(logger, "CrossTrack: %f", closest_point.second);
+
+  // Clean up
+  m_poses.clear();
 
   return std::make_pair(true, steering_angle);
 }
