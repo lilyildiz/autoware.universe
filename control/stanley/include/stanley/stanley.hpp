@@ -78,7 +78,7 @@ public:
   /**
    * @brief constructor
    */
-  Stanley() = default;
+  Stanley();
 
   /**
    * @brief destructor
@@ -90,19 +90,19 @@ public:
    * @brief set current trajectory
    * @param trajectory current trajectory
    */
-  void setTrajectory(const Trajectory & trajectory);
+  void setTrajectory(const Trajectory & trajectory) { *m_trajectory_ptr = trajectory; };
 
   /**
    * @brief set current pose
    * @param pose current pose
    */
-  void setPose(const Pose & pose);
+  void setPose(const Pose & pose) { *m_pose_ptr = pose; };
 
   /**
    * @brief set current odometry
    * @param odom current odometry
    */
-  void setOdom(const Odometry & odom);
+  void setOdom(const Odometry & odom) { *m_odom_ptr = odom; };
 
   /**
    * @brief set stanley algorithm parameters
@@ -136,9 +136,9 @@ private:
 
   /* State */
   //!< @brief current steering angle
-  double m_curr_steer{0.0};
+  double m_curr_steer{};
   //!< @brief previous steering angle
-  double m_prev_steer{0.0};
+  double m_prev_steer{};
 
   /* Inputs */
   //!< @brief current trajectory

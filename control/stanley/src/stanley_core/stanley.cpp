@@ -21,22 +21,14 @@ namespace autoware
 namespace stanley
 {
 
-void Stanley::setTrajectory(const Trajectory & trajectory)
+Stanley::Stanley()
 {
   m_trajectory_ptr = std::make_shared<Trajectory>();
-  *m_trajectory_ptr = trajectory;
-}
-
-void Stanley::setPose(const Pose & pose)
-{
   m_pose_ptr = std::make_shared<Pose>();
-  *m_pose_ptr = pose;
-}
-
-void Stanley::setOdom(const Odometry & odom)
-{
   m_odom_ptr = std::make_shared<Odometry>();
-  *m_odom_ptr = odom;
+
+  m_curr_steer = 0.0;
+  m_prev_steer = 0.0;
 }
 
 bool Stanley::isReady() const
